@@ -80,7 +80,8 @@ short_name <- function(in_string){
   
 
 players_df <- players_df %>% mutate(Full_Name = sapply(Name, FUN = full_name),
-                                    Short_Name = sapply(Name, FUN = short_name))
+                                    Short_Name = sapply(Name, FUN = short_name)) %>% 
+  select(-c(Name))
 
 
 
@@ -123,7 +124,7 @@ full_name <- function(input_string){
 injuries_df <- injuries_df %>% mutate(Date = mdy(Date),
                                       Short_Name = sapply(Player, short_name),
                                       Full_Name = sapply(Player, full_name)
-                                      )
+                                      ) %>% select(-Player)
 
 
 

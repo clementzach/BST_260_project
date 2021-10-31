@@ -185,7 +185,8 @@ fix_nfl_names <- function(x){ #https://rdrr.io/github/papagorgio23/bettoR/src/R/
 # Some people who are injured are no longer on the roster => out for season
 nfl_roster %<>% 
   mutate(Team = fix_nfl_names(Team)) %>% 
-  select(-c(X, College, Drafted, Height, Number, Birthday, Draft.Round, Draft.Pick, Birthday_string, Number))
+  select(-c(X, College, Drafted, Height, Number, Birthday, 
+            Draft.Round, Draft.Pick, Birthday_string, Number))
 
 injured_still_on_team = nfl_roster %>% 
             inner_join(injuries[, -1], by = c("Full_Name", "Short_Name", "Team"))
@@ -196,7 +197,9 @@ roster_with_injuries = nfl_roster %>%
                      case_when(str_detect(ordinal_injury, "IR") ~ 2, 
                                str_detect(ordinal_injury, "Questionable") ~ 1,
                                str_detect(ordinal_injury, "Doubtful") ~ 1,
-                               is.na(ordinal_injury) ~ 0)
+                               is.na(ordinal_injury) ~ 0),
+                   binary_injury = 
+                     ifelse(is.na(binary_injury), 0, 1)
                    )
 
 ```
@@ -206,14 +209,17 @@ roster_with_injuries = nfl_roster %>%
 ### NA's per variable
 ```{r}
 apply(injured_still_on_team, 2 , function(x) sum(is.na(x))) # distribution of NA's
+
+
+apply(roster_with_injuries, 2 , function(x) sum(is.na(x))) 
 ```
 
 &nbsp;
 
 ### Collinearity for Height/Weight
 ```{r}
-cor.test(injured_still_on_team$height_inches, 
-         injured_still_on_team$Weight) # expected, so will combine to BMI
+cor.test(roster_with_injuries$height_inches, 
+         roster_with_injuries$Weight) # expected, so will combine to BMI
 ```
 
 &nbsp;
@@ -221,12 +227,10 @@ cor.test(injured_still_on_team$height_inches,
 ### Create factors and new variables of interest
 ```{r}
 injured_still_on_team %<>% mutate(Injury = as.factor(Injury), 
-                     Position = as.factor(Position), 
+                     Pos = as.factor(Pos), 
                      Team = as.factor(Team))
 
-
-roster_with_injuries %<>% mutate(Injury = as.factor(Injury), 
-                     Position = as.factor(Position), 
+roster_with_injuries %<>% mutate(Pos = as.factor(Pos), 
                      Team = as.factor(Team))
 
 
@@ -238,9 +242,13 @@ Defensive_Player = c("DL", "DE", "LE", "RE", "DT", "NT", "LB", "MLB", "ILB",
 
 Special_Teams = c("P", "K", "PR")
 
+
 injured_still_on_team %<>% 
-  mutate(severe_injury = binary_injury, # bad injury yes/no
-           Offense = ifelse(Position %in% c(Offensive_Player, Special_Teams), 1, 0), # offense yes/no
+  mutate(Offense = ifelse(Pos %in% c(Offensive_Player, Special_Teams), 1, 0), # offense yes/no
+           BMI = (Weight / height_inches^2) * 703) # BMI
+
+roster_with_injuries %<>% 
+  mutate(Offense = ifelse(Pos %in% c(Offensive_Player, Special_Teams), 1, 0), # offense yes/no
            BMI = (Weight / height_inches^2) * 703) # BMI
 ```
 
@@ -248,17 +256,17 @@ injured_still_on_team %<>%
 
 ### Descriptive stats
 ```{r}
-number_injury = injuries %>% group_by(Team) %>% 
+number_injury = injured_still_on_team %>% group_by(Team) %>% 
   summarize(num_injury = length(Injury))
 
-pander(summary(number_injury$num_injury)) # ~13 injuries per team
+pander(summary(number_injury$num_injury)) # ~10 injuries per team
 ```
 
 &nbsp;
 
 ### Histogram + Boxplot of Injuries per Team
 ```{r}
-number_injury %>%  # histogram (looks kinda normal)
+number_injury %>%  # histogram (looks kinda bimodal...why??)
   ggplot(aes(num_injury)) + 
     geom_histogram(binwidth = 1) + 
     xlab("# of Injuries per Team")
@@ -273,7 +281,7 @@ number_injury %>% # boxplot (looks kinda symmetric)
 
 ### Injuries by Team and Position
 ```{r}
-injuries %>% group_by(Injury) %>% 
+injured_still_on_team %>% group_by(Injury) %>% 
   summarize(num_injury = length(Injury)) %>%
   mutate(Injury = fct_reorder(Injury, num_injury, .desc = T)) %>%
   ggplot(aes(Injury, num_injury)) + 
@@ -283,7 +291,7 @@ injuries %>% group_by(Injury) %>%
   theme(axis.text.x = element_text(angle = 90, hjust = 1))
 
 # Injuries by Team
-injuries %>% group_by(Team) %>% 
+injured_still_on_team %>% group_by(Team) %>% 
   summarize(num_injury = length(Injury)) %>% 
   arrange(desc(num_injury)) %>% 
   mutate(Team = fct_reorder(Team, num_injury, .desc = T)) %>% 
@@ -294,14 +302,15 @@ injuries %>% group_by(Team) %>%
 
 
 # Injuries by Position
-injuries %>% group_by(Position) %>% 
+injured_still_on_team %>% group_by(Pos) %>% 
   summarize(num_injury = length(Injury)) %>% 
   arrange(desc(num_injury)) %>% 
-  mutate(Position = fct_reorder(Position, num_injury, .desc = T)) %>% 
-  ggplot(aes(Position, num_injury)) + 
+  mutate(Pos = fct_reorder(Pos, num_injury, .desc = T)) %>% 
+  ggplot(aes(Pos, num_injury)) + 
   geom_col() +
   theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
   ylab("# of Injuries") +
+  xlab("Position") +
   ggtitle("Injury by Position")
 
 ```
@@ -310,8 +319,8 @@ injuries %>% group_by(Position) %>%
 
 ### Logistic Regression
 ```{r}
-logi_fit = glm(data = injured_still_on_team, 
-               severe_injury ~ Age + Exp. + BMI + Offense, family = "binomial")
+logi_fit = glm(data = roster_with_injuries, 
+               binary_injury ~ Age + Exp. + BMI + Offense, family = "binomial")
 
 pander(summary(logi_fit))
 ```
@@ -320,8 +329,8 @@ pander(summary(logi_fit))
 
 ### Logistic Regression w/Team + Position
 ```{r}
-logi_fit_Team_Pos = glm(data = injured_still_on_team, 
-                        severe_injury ~ Team + Position, family = "binomial")
+logi_fit_Team_Pos = glm(data = roster_with_injuries, 
+                        binary_injury ~ Team + Pos, family = "binomial")
 
 pander(summary(logi_fit_Team_Pos))
 
@@ -335,21 +344,19 @@ pander(summary(logi_fit_Team_Pos))
 
 &nbsp;
 
-### Ordinal Regression???
+### Multinomial
 ```{r}
-'injuries %<>% mutate(Injury_Ord = 
-                       case_when(
-                         str_detect(Injury.Status, "IR") ~ "IR",
-                         str_detect(Injury.Status, "Expected Return") ~ "Expected Return",
-                         str_detect(Injury.Status, "Questionable") ~ "Questionable",
-                         str_detect(Injury.Status, "NFI") ~ "Non-Football Injury",
-                         TRUE ~ "other"
-                       )
-                     ) '
+multinom_injury = multinom(data = roster_with_injuries,
+                           ordinal_injury ~ Exp.) # Experience only
+summary(multinom_injury)
 
-#View(cbind.data.frame(injuries$Injury.Status, injuries$Injury_Ord))
-
-
+ggplot(roster_with_injuries, aes(Exp., multinom_injury$fitted.values[,1])) +
+  geom_line(aes(Exp., multinom_injury$fitted.values[,1], color = "No Injury")) +
+  geom_line(aes(Exp., multinom_injury$fitted.values[,2], color = "Questionable/Doubtful")) +
+  geom_line(aes(Exp., multinom_injury$fitted.values[,3], color = "Injured Reserve")) +
+  scale_color_discrete("Status") +
+  ylab("Predicted Probabilities") +
+  xlab("Experience")
 ```
 
 

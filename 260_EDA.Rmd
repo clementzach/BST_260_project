@@ -109,9 +109,86 @@ injuries %<>% filter(!ordinal_injury %in% c("COVID-19", "NFI")) %>%
 
 &nbsp;
 
-### Merge data.frames by `Full_Name`
+```{r, include=F} 
+fix_nfl_names <- function(x){ #https://rdrr.io/github/papagorgio23/bettoR/src/R/fix_nfl_names.R
+  x[grep("Arizona Cardinals", x, ignore.case=TRUE)] <- "ARI"
+  
+  x[grep("Atlanta Falcons", x, ignore.case=TRUE)] <- "ATL"
+
+  x[grep("Baltimore Ravens", x, ignore.case=TRUE)] <- "BAL"
+
+  x[grep("Buffalo Bills", x, ignore.case=TRUE)] <- "BUF"
+
+  x[grep("Carolina Panthers", x, ignore.case=TRUE)] <- "CAR"
+
+  x[grep("Chicago Bears", x, ignore.case=TRUE)] <- "CHI"
+
+  x[grep("Cincinnati Bengals", x, ignore.case=TRUE)] <- "CIN"
+
+  x[grep("Cleveland Browns", x, ignore.case=TRUE)] <- "CLE"
+
+  x[grep("Dallas Cowboys", x, ignore.case=TRUE)] <- "DAL"
+
+  x[grep("Denver Broncos", x, ignore.case=TRUE)] <- "DEN"
+
+  x[grep("Detroit Lions", x, ignore.case=TRUE)] <- "DET"
+
+  x[grep("Green Bay-Packers", x, ignore.case=TRUE)] <- "GB"
+
+  x[grep("Houston Texans", x, ignore.case=TRUE)] <- "HOU"
+
+  x[grep("Indianapolis Colts", x, ignore.case=TRUE)] <- "IND"
+
+  x[grep("Jacksonville Jaguars", x, ignore.case=TRUE)] <- "JAX"
+
+  x[grep("Kansas City-Chiefs", x, ignore.case=TRUE)] <- "KC"
+
+  x[grep("Miami Dolphins", x, ignore.case=TRUE)] <- "MIA"
+
+  x[grep("Minnesota Vikings", x, ignore.case=TRUE)] <- "MIN"
+
+  x[grep("New England-Patriots", x, ignore.case=TRUE)] <- "NE"
+
+  x[grep("New Orleans-Saints", x, ignore.case=TRUE)] <- "NO"
+
+  x[grep("New York-Jets", x, ignore.case=TRUE)] <- "NYJ"
+
+  x[grep("New York-Giants", x, ignore.case=TRUE)] <- "NYG"
+
+  x[grep("Las Vegas-Raiders", x, ignore.case=TRUE)] <- "OAK"
+
+  x[grep("Philadelphia Eagles", x, ignore.case=TRUE)] <- "PHI"
+
+  x[grep("Pittsburgh Steelers", x, ignore.case=TRUE)] <- "PIT"
+
+  x[grep("Los Angeles-Chargers", x, ignore.case=TRUE)] <- "LAC"
+
+  x[grep("Los Angeles-Rams", x, ignore.case=TRUE)] <- "LAR"
+
+  x[grep("San Francisco-49ers", x, ignore.case=TRUE)] <- "SF"
+
+  x[grep("Seattle Seahawks", x, ignore.case=TRUE)] <- "SEA"
+
+  x[grep("Tampa Bay-Buccaneers", x, ignore.case=TRUE)] <- "TB"
+
+  x[grep("Tennessee Titans", x, ignore.case=TRUE)] <- "TEN"
+
+  x[grep("Washington Redskins", x, ignore.case=TRUE)] <- "WAS"
+
+  return(x)
+}
+```
+
+
+### Merge data.frames by "Full_Name"
 ```{r}
 # Some people who are injured are no longer on the roster => out for season
+nfl_roster %<>% mutate(Team = fix_nfl_names(Team))
+
+roster_injuries = nfl_roster %>% 
+            select(-c(X, College, Drafted, Height, Number, Birthday, Draft.Round, Draft.Pick, Birthday_string, Number)) %>% 
+            inner_join(injuries[, -1], by = c("Full_Name", "Short_Name"))
+
 injured_still_on_team = nfl_roster %>% 
             select(-c(X, College, Drafted, Height, Number, Birthday, Draft.Round, Draft.Pick, Birthday_string, Number)) %>% 
             left_join(injuries[, -1], by = c("Full_Name", "Short_Name"))

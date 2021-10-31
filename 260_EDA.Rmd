@@ -1,0 +1,280 @@
+---
+title: "260 Project EDA"
+author: "Group Name: K-Nearest Tailgaters"
+date: "`r Sys.Date()`"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=F}
+knitr::opts_chunk$set(echo = TRUE, message = F)
+```
+
+
+```{r, include=F}
+library(foreign)
+library(gam)
+library(ggrepel)
+library(ggthemes)
+library(gridExtra)
+library(magrittr)
+library(nnet)
+library(pander)
+library(splines2)
+library(splines)
+library(tidyverse)
+library(VGAM)
+options(digits=3)
+theme_update(plot.title = element_text(hjust = 0.5))
+```
+
+```{r}
+injuries = read.csv("injuries.csv")
+nfl_roster = read.csv("nfl_roster.csv")
+```
+
+&nbsp;
+
+### Check for duplicates, NA's in outcome
+```{r}
+any(duplicated(injuries[["Full_Name"]])) # no duplicate names (multiple injuries during the year)
+any(is.na(injuries[["Injury"]])) # no NA's in outcome
+```
+
+&nbsp;
+
+### `Injury.Status`: What to do with non-football injuries (NFI-R), or COVID? How can we sort based on injury severity?
+```{r}
+table(injuries$Injury.Status)
+```
+
+&nbsp;
+
+### One idea: IR > Doubtful > Questionable, then remove NFI and COVID
+```{r}
+var_change = function(x) {
+  ordinal_injury = c()
+  for(i in seq_along(x)) {
+    if (str_detect(x[i], "NFI") | str_detect(x[i], "Non Football Injury")) {
+      ordinal_injury[i] = "NFI"
+    }
+    else if (str_detect(x[i], "Questionable")) {
+      ordinal_injury[i] = "Questionable"
+    }
+    else if (str_detect(x[i], "Doubtful")) {
+      ordinal_injury[i] = "Doubtful"
+    }
+    else if (str_detect(x[i], "COVID-19")) {
+      ordinal_injury[i] = "COVID-19"
+    }
+    else if (str_detect(x[i], "IR") | str_detect(x[i], "Physically Unable to Perform")) {
+      ordinal_injury[i] = "IR"
+    }
+    else {
+      ordinal_injury[i] = "other"
+    }
+  }
+  ordinal_injury
+}
+
+injuries %<>% mutate(ordinal_injury = var_change(injuries$Injury.Status))
+table(injuries$ordinal_injury)
+
+```
+
+&nbsp;
+
+### What are the "other" injuries?
+```{r}
+injuries %>% filter(ordinal_injury == "other") %>% select(Injury, Injury.Status) # Not the kneecap!!
+```
+
+&nbsp;
+
+### Maybe "Out for Week X" == "IR"?
+```{r}
+injuries$ordinal_injury[injuries$ordinal_injury == "other"] = "IR"
+```
+
+&nbsp;
+
+### Well, it seems that players are really only "Questionable" or on "IR".
+
+### We can remove "COVID-19" and "NFI" injuries, and merge "Doubtful" with "Questionable":
+```{r}
+injuries %<>% filter(!ordinal_injury %in% c("COVID-19", "NFI")) %>% 
+              mutate(binary_injury = ifelse(ordinal_injury == "IR", 1, 0))
+```
+
+&nbsp;
+
+### Merge data.frames by `Full_Name`
+```{r}
+# Some people who are injured are no longer on the roster => out for season
+injured_still_on_team = nfl_roster %>% 
+            select(-c(X, College, Drafted, Height, Number, Birthday, Draft.Round, Draft.Pick, Birthday_string, Number)) %>% 
+            left_join(injuries[, -1], by = c("Full_Name", "Short_Name"))
+
+hiiii = injured_still_on_team %>% filter(!is.na(Position))
+mean(hiiii$Pos == hiiii$Position) # Yikes! We have a disagreement with the position names
+```
+
+&nbsp;
+
+### NA's per variable
+```{r}
+apply(injured_still_on_team, 2 , function(x) sum(is.na(x))) # distribution of NA's
+```
+
+&nbsp;
+
+### Collinearity for Height/Weight
+```{r}
+cor.test(injured_still_on_team$height_inches, 
+         injured_still_on_team$Weight) # expected, so will combine to BMI
+```
+
+&nbsp;
+
+### Create factors and new variables of interest
+```{r}
+injuries %<>% mutate(Injury = as.factor(Injury), 
+                     Position = as.factor(Position), 
+                     Team = as.factor(Team))
+
+
+injured_still_on_team %<>% mutate(Injury = as.factor(Injury), 
+                     Position = as.factor(Position), 
+                     Team = as.factor(Team))
+
+
+Offensive_Player = c("QB", "RB", "FB", "TB", "HB", "OL", "G", "LG", "RG", 
+                     "T", "LT", "RT", "C", "WR", "TE")
+
+Defensive_Player = c("DL", "DE", "LE", "RE", "DT", "NT", "LB", "MLB", "ILB", 
+                     "OLB", "LOLB", "ROLB", "DB", "CB", "S", "SS", "FS")
+
+Special_Teams = c("P", "K", "PR")
+
+injured_still_on_team %<>% 
+  mutate(severe_injury = binary_injury, # bad injury yes/no
+           Offense = ifelse(Position %in% c(Offensive_Player, Special_Teams), 1, 0), # offense yes/no
+           BMI = (Weight / height_inches^2) * 703) # BMI
+```
+
+&nbsp;
+
+### Descriptive stats
+```{r}
+number_injury = injuries %>% group_by(Team) %>% 
+  summarize(num_injury = length(Injury))
+
+pander(summary(number_injury$num_injury)) # ~13 injuries per team
+```
+
+&nbsp;
+
+### Histogram + Boxplot of Injuries per Team
+```{r}
+number_injury %>%  # histogram (looks kinda normal)
+  ggplot(aes(num_injury)) + 
+    geom_histogram(binwidth = 1) + 
+    xlab("# of Injuries per Team")
+
+number_injury %>% # boxplot (looks kinda symmetric)
+  ggplot(aes(num_injury)) + 
+    geom_boxplot() + 
+    xlab("# of Injuries")
+```
+
+&nbsp;
+
+### Injuries by Team and Position
+```{r}
+injuries %>% group_by(Injury) %>% 
+  summarize(num_injury = length(Injury)) %>%
+  mutate(Injury = fct_reorder(Injury, num_injury, .desc = T)) %>%
+  ggplot(aes(Injury, num_injury)) + 
+  geom_col() +
+  ylab("Count") +
+  ggtitle("Distribution of Injuries") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+# Injuries by Team
+injuries %>% group_by(Team) %>% 
+  summarize(num_injury = length(Injury)) %>% 
+  arrange(desc(num_injury)) %>% 
+  mutate(Team = fct_reorder(Team, num_injury, .desc = T)) %>% 
+  ggplot(aes(Team, num_injury)) + geom_col() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  ylab("# of Injuries") +
+  ggtitle("Injury by Team")
+
+
+# Injuries by Position
+injuries %>% group_by(Position) %>% 
+  summarize(num_injury = length(Injury)) %>% 
+  arrange(desc(num_injury)) %>% 
+  mutate(Position = fct_reorder(Position, num_injury, .desc = T)) %>% 
+  ggplot(aes(Position, num_injury)) + 
+  geom_col() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  ylab("# of Injuries") +
+  ggtitle("Injury by Position")
+
+```
+
+&nbsp;
+
+### Logistic Regression
+```{r}
+logi_fit = glm(data = injured_still_on_team, 
+               severe_injury ~ Age + Exp. + BMI + Offense, family = "binomial")
+
+pander(summary(logi_fit))
+```
+
+&nbsp;
+
+### Logistic Regression w/Team + Position
+```{r}
+logi_fit_Team_Pos = glm(data = injured_still_on_team, 
+                        severe_injury ~ Team + Position, family = "binomial")
+
+pander(summary(logi_fit_Team_Pos))
+
+```
+
+&nbsp;
+
+**Maybe too much information in the outcome is lost by making injury binary, maybe ordinal or multinomial would be preferred.**
+
+**We also might want to use data from past years as we are only half way through the current season.**
+
+&nbsp;
+
+### Ordinal Regression???
+```{r}
+'injuries %<>% mutate(Injury_Ord = 
+                       case_when(
+                         str_detect(Injury.Status, "IR") ~ "IR",
+                         str_detect(Injury.Status, "Expected Return") ~ "Expected Return",
+                         str_detect(Injury.Status, "Questionable") ~ "Questionable",
+                         str_detect(Injury.Status, "NFI") ~ "Non-Football Injury",
+                         TRUE ~ "other"
+                       )
+                     ) '
+
+#View(cbind.data.frame(injuries$Injury.Status, injuries$Injury_Ord))
+
+
+```
+
+
+
+
+
+
+
+

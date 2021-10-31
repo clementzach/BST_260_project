@@ -183,18 +183,22 @@ fix_nfl_names <- function(x){ #https://rdrr.io/github/papagorgio23/bettoR/src/R/
 ### Merge data.frames by "Full_Name"
 ```{r}
 # Some people who are injured are no longer on the roster => out for season
-nfl_roster %<>% mutate(Team = fix_nfl_names(Team))
-
-roster_injuries = nfl_roster %>% 
-            select(-c(X, College, Drafted, Height, Number, Birthday, Draft.Round, Draft.Pick, Birthday_string, Number)) %>% 
-            inner_join(injuries[, -1], by = c("Full_Name", "Short_Name"))
+nfl_roster %<>% 
+  mutate(Team = fix_nfl_names(Team)) %>% 
+  select(-c(X, College, Drafted, Height, Number, Birthday, Draft.Round, Draft.Pick, Birthday_string, Number))
 
 injured_still_on_team = nfl_roster %>% 
-            select(-c(X, College, Drafted, Height, Number, Birthday, Draft.Round, Draft.Pick, Birthday_string, Number)) %>% 
-            left_join(injuries[, -1], by = c("Full_Name", "Short_Name"))
+            inner_join(injuries[, -1], by = c("Full_Name", "Short_Name", "Team"))
 
-hiiii = injured_still_on_team %>% filter(!is.na(Position))
-mean(hiiii$Pos == hiiii$Position) # Yikes! We have a disagreement with the position names
+roster_with_injuries = nfl_roster %>% 
+            left_join(injuries[,-1], by = c("Full_Name", "Short_Name", "Team")) %>% 
+            mutate(ordinal_injury = 
+                     case_when(str_detect(ordinal_injury, "IR") ~ 2, 
+                               str_detect(ordinal_injury, "Questionable") ~ 1,
+                               str_detect(ordinal_injury, "Doubtful") ~ 1,
+                               is.na(ordinal_injury) ~ 0)
+                   )
+
 ```
 
 &nbsp;
@@ -216,12 +220,12 @@ cor.test(injured_still_on_team$height_inches,
 
 ### Create factors and new variables of interest
 ```{r}
-injuries %<>% mutate(Injury = as.factor(Injury), 
+injured_still_on_team %<>% mutate(Injury = as.factor(Injury), 
                      Position = as.factor(Position), 
                      Team = as.factor(Team))
 
 
-injured_still_on_team %<>% mutate(Injury = as.factor(Injury), 
+roster_with_injuries %<>% mutate(Injury = as.factor(Injury), 
                      Position = as.factor(Position), 
                      Team = as.factor(Team))
 

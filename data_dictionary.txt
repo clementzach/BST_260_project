@@ -1,0 +1,29 @@
+Data Dictionary for injuries_players_<date>.csv file
+
+name: individual's full name
+full_team: The name of the team in words
+team: Abbreviation of the team name
+year: The season in which the injury data was collected from
+games_in_season: The number of games an individual could have played in a given season
+num_games_missing: The number of games the individual did not play due to an injury (This sometimes included individuals excluded due to disciplinary action sometimes)
+num_games_injured: The number of games an individual was classified as "injured" on the website. (This sometimes included disciplinary suspensions)
+injury_types: Words describing the player's injuries for the season, separated by spaces.
+earliest_injury: The nth game of the season in which the player was first described as injured.
+latest_injury: The nth game of the season in which the player was last described as injured.
+(Below columns are from gridiron.ai, and their data dictionary is at https://docs.google.com/spreadsheets/d/1aHksQRC0v-Z9TQX-Ps9HROVA5vMlaXm4gAa4aav-hxc/edit#gid=0)
+position_id: Position ID 
+NFL_draft_year: Year Player was drafted
+NFL_draft_round: round player was drafted
+NFL_draft_rank: Player's draft rank
+height_inches: Player's height in inches
+weight_pounds: Player's weight in pounds
+birthdate: Date the player was born
+forty_yd: Forty yard time at the combine
+three_cone: Three cone time at the combine
+bench: Bench press at the combine
+broad_jump: Broad jump distance at the combine
+combine_height: Height from the combine
+combine_weight: Weight from the combine
+shuttle: shuttle at the combine
+vertical: Vertical at the combine
+game_starter: Whether the player started the game in the first week of the season for which information was available

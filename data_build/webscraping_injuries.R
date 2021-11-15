@@ -26,6 +26,7 @@ current_year_list <- list()
 for (year in 2009:2021) {
   current_teams_list <- list()
   for (team in team_names) {
+    Sys.sleep(5) #not hammer his servers too badly
     url = paste(
       'https://www.pro-football-reference.com/teams/',
       team,

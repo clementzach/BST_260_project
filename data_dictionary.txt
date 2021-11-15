@@ -1,4 +1,36 @@
-Data Dictionary for injuries_players_<date>.csv file
+Data Dictionary:
+
+There are two csv files in this folder. 
+
+The all_players_some_injuries<date>.csv file contains all players (scraped from https://www.pro-football-reference.com/players/) and information on these player's injuries when available (player injuries are scraped from https://www.pro-football-reference.com/)
+
+
+The injuries_players_<date>.csv file contains all information on injuries (scraped from https://www.pro-football-reference.com) as well as information on the individual players (taken from gridironai.com) when available. 
+
+for all_players_some_injuries<date>.csv file:
+
+name: individual's full name
+position: A string containing all positions mentioned in the player info (note that in this csv file, position denotes all positions played in a player's career, while in the other csv file, position ID denotes all positions played during the current season)
+full_team: The name of the team in words
+team: Abbreviation of the team name
+year: The season in which the injury data was collected from
+height: player's height in inches
+weight: player's weight in pounds
+birthday: player's birthday
+birthplace: player's place of birth, if listed in their sheet
+college: player's college, if listed
+games_in_season: The number of games an individual could have played in a given season
+num_games_missing: The number of games the individual did not play due to an injury (This sometimes included individuals excluded due to disciplinary action sometimes)
+num_games_injured: The number of games an individual was classified as "injured" on the website. (This sometimes included disciplinary suspensions)
+injury_types: Words describing the player's injuries for the season, separated by spaces.
+earliest_injury: The nth game of the season in which the player was first described as injured.
+latest_injury: The nth game of the season in which the player was last described as injured.
+
+
+
+
+for injuries_players_<date>.csv file
+
 
 name: individual's full name
 full_team: The name of the team in words

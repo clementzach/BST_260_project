@@ -1,0 +1,147 @@
+---
+title: "EDA for P1"
+author: "k-Nearest Tailgaters"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=F}
+knitr::opts_chunk$set(echo = TRUE, message = F)
+```
+
+
+```{r, include=F}
+library(foreign)
+library(gam)
+library(ggrepel)
+library(ggthemes)
+library(gridExtra)
+library(magrittr)
+library(nnet)
+library(pander)
+library(splines)
+library(splines2)
+library(tidyverse)
+library(VGAM)
+library(pscl)
+library(vcd)
+library(AER)
+options(digits = 3)
+theme_update(plot.title = element_text(hjust = 0.5))
+```
+
+```{r}
+injuries = read.csv("injuries_players2021-11-15.csv")
+head(injuries)
+```
+
+```{r, include=F}
+fix_nfl_names <- function(x){ #https://rdrr.io/github/papagorgio23/bettoR/src/R/fix_nfl_names.R
+  x[grep("Arizona Cardinals", x, ignore.case=TRUE)] <- "ARI"
+  
+  x[grep("Atlanta Falcons", x, ignore.case=TRUE)] <- "ATL"
+
+  x[grep("Baltimore Ravens", x, ignore.case=TRUE)] <- "BAL"
+
+  x[grep("Buffalo Bills", x, ignore.case=TRUE)] <- "BUF"
+
+  x[grep("Carolina Panthers", x, ignore.case=TRUE)] <- "CAR"
+
+  x[grep("Chicago Bears", x, ignore.case=TRUE)] <- "CHI"
+
+  x[grep("Cincinnati Bengals", x, ignore.case=TRUE)] <- "CIN"
+
+  x[grep("Cleveland Browns", x, ignore.case=TRUE)] <- "CLE"
+
+  x[grep("Dallas Cowboys", x, ignore.case=TRUE)] <- "DAL"
+
+  x[grep("Denver Broncos", x, ignore.case=TRUE)] <- "DEN"
+
+  x[grep("Detroit Lions", x, ignore.case=TRUE)] <- "DET"
+
+  x[grep("Green Bay Packers", x, ignore.case=TRUE)] <- "GB"
+
+  x[grep("Houston Texans", x, ignore.case=TRUE)] <- "HOU"
+
+  x[grep("Indianapolis Colts", x, ignore.case=TRUE)] <- "IND"
+
+  x[grep("Jacksonville Jaguars", x, ignore.case=TRUE)] <- "JAX"
+
+  x[grep("Kansas City Chiefs", x, ignore.case=TRUE)] <- "KC"
+
+  x[grep("Miami Dolphins", x, ignore.case=TRUE)] <- "MIA"
+
+  x[grep("Minnesota Vikings", x, ignore.case=TRUE)] <- "MIN"
+
+  x[grep("New England Patriots", x, ignore.case=TRUE)] <- "NE"
+
+  x[grep("New Orleans Saints", x, ignore.case=TRUE)] <- "NO"
+
+  x[grep("New York Jets", x, ignore.case=TRUE)] <- "NYJ"
+
+  x[grep("New York Giants", x, ignore.case=TRUE)] <- "NYG"
+
+  x[grep("Las Vegas Raiders", x, ignore.case=TRUE)] <- "OAK"
+
+  x[grep("Philadelphia Eagles", x, ignore.case=TRUE)] <- "PHI"
+
+  x[grep("Pittsburgh Steelers", x, ignore.case=TRUE)] <- "PIT"
+
+  x[grep("Los Angeles Chargers", x, ignore.case=TRUE)] <- "LAC"
+
+  x[grep("Los Angeles Rams", x, ignore.case=TRUE)] <- "LAR"
+
+  x[grep("San Francisco 49ers", x, ignore.case=TRUE)] <- "SF"
+
+  x[grep("Seattle Seahawks", x, ignore.case=TRUE)] <- "SEA"
+
+  x[grep("Tampa Bay Buccaneers", x, ignore.case=TRUE)] <- "TB"
+
+  x[grep("Tennessee Titans", x, ignore.case=TRUE)] <- "TEN"
+
+  x[grep("Washington Redskins", x, ignore.case=TRUE)] <- "WAS"
+
+  return(x)
+}
+```
+
+
+```{r}
+injuries = injuries %>% mutate(short_team_name = fix_nfl_names(full_team)) %>% 
+                        select(name, full_team, 
+                               year, games_in_season, 
+                               num_games_missing, num_games_injured, injury_types,
+                               earliest_injury, latest_injury, position_id, 
+                               height_inches, weight_pounds, birthdate,
+                               short_team_name) %>% 
+                        filter(position_id != "")
+head(injuries)
+```
+
+# P1
+
+'Which positions are most at-risk for injuries?
+We’ll compile basic descriptive statistics on this question'
+
+```{r}
+number_injury = injuries %>% group_by(position_id, year) %>% 
+                             count()
+                        
+number_injury %>% ggplot(aes(year, n, color = position_id)) +
+                    geom_line() +
+                    ylab("# of Injuries") +
+                    scale_color_discrete(name = "Position")
+
+             
+## 34334
+```
+
+
+We’ll run logistic regression and other classification models (kNN, random forest, etc.) for predicting injury risk using position as a categorical covariate, and compare results
+
+```{r}
+
+```
+
+
+

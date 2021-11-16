@@ -132,14 +132,24 @@ number_injury %>% ggplot(aes(year, n, color = position_id)) +
                     ylab("# of Injuries") +
                     scale_color_discrete(name = "Position")
 
-             
-## 34334
+
+
 ```
 
 
 We’ll run logistic regression and other classification models (kNN, random forest, etc.) for predicting injury risk using position as a categorical covariate, and compare results
 
 ```{r}
+players = read.csv("all_players_some_injuries2021-11-15.csv")
+head(players)
+
+players = players %>% mutate(injury = ifelse(is.na(injury_types), 1, 0),
+                             position = as.factor(position))
+
+
+
+logi_fit = glm(data = players, injury ~ position + height + weight, family = binomial())
+pander(summary(logi_fit))
 
 ```
 

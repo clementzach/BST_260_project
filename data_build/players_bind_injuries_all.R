@@ -3,6 +3,7 @@ injuries_df <- read.csv('injuries_2009_2021.csv')
 
 library(dplyr)
 library(lubridate)
+library(stringr)
 
 injuries_df <- injuries_df %>% 
   mutate(name = sapply(Player, function(x){full = str_split(x, ",")[[1]]; return(paste(full[2], full[1]) %>% str_trim())}),

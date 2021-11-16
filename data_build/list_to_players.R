@@ -29,11 +29,14 @@ for (year in names(current_year_list)) {
       })
     earliest_injury <-
       sapply(df_as_list, function(x) {
-        min(which(!(x == '')))
+        max( #in case it returns -inf
+          min(which(!(x == ''))), 
+            0)
       })
     latest_injury <-
       sapply(df_as_list, function(x) {
-        max(which(!(x == '')))
+        min(max(which(!(x == ''))), #in case it returns inf
+            games_in_season)
       })
     injury_types <- sapply(df_as_list, function(x) {
       injury <- sapply(x, function(x) {

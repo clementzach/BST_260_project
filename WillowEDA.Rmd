@@ -1,0 +1,74 @@
+---
+title: "R Notebook"
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r}
+library(dplyr)
+library(stringr)
+```
+
+
+```{r}
+all_players <- read.csv("C:/Users/wduff/OneDrive/School/Harvard/Fall2021/BST260/BST_260_project/all_players_some_injuries2021-11-15.csv", stringsAsFactors=T)
+```
+
+```{r}
+head(all_players)
+```
+
+
+```{r}
+all_injuries <- read.csv("injuries_players2021-11-15.csv")
+```
+
+```{r}
+head(all_injuries)
+```
+
+Which injuries are most common in the NFL?
+  We will present summary statistics and graphs demonstrating injury frequency Will include specific injuries along with injuries        categorized by body part (knee, head, shoulder, etc.)
+  
+  Breakdown of injury composition by position
+  
+Create a Shiny app showing summary data
+  Show a bar chart with the count and type of injuries
+  Inputs: age range, team, position
+
+```{r}
+all_injuries <- all_injuries %>% mutate(injury_types = tolower(injury_types))
+```
+
+```{r}
+levels(as.factor(all_injuries$injury_types))
+```
+
+
+```{r}
+df <- all_injuries[1:20,]
+```
+
+```{r}
+sum(str_detect(df$injury_types, pattern = fixed("head")))
+sum(str_detect(df$injury_types, pattern = fixed("ankle")))
+sum(str_detect(df$injury_types, pattern = fixed("knee")))
+
+```
+
+Replace any "/" with " " ?
+```{r}
+df$injury_types <- gsub("/", " ", df$injury_types)
+df
+```
+
+
+```{r}
+levels(as.factor(all_injuries$earliest_injury))
+levels(as.factor(all_injuries$latest_injury))
+levels(as.factor(all_injuries$year))
+levels(as.factor(all_injuries$team))
+```
+
+hi!!!

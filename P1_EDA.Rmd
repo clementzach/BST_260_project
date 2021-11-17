@@ -11,6 +11,9 @@ knitr::opts_chunk$set(echo = TRUE, message = F)
 
 
 ```{r, include=F}
+library(AER)
+library(caret)
+library(e1071)
 library(foreign)
 library(gam)
 library(ggrepel)
@@ -19,20 +22,22 @@ library(gridExtra)
 library(magrittr)
 library(nnet)
 library(pander)
+library(pROC)
+library(pscl)
+library(randomForest)
+library(rpart)
 library(splines)
 library(splines2)
+library(splitstackshape)
 library(tidyverse)
 library(VGAM)
-library(pscl)
 library(vcd)
-library(AER)
 options(digits = 3)
 theme_update(plot.title = element_text(hjust = 0.5))
 ```
 
 ```{r}
-injuries = read.csv("injuries_players2021-11-15.csv")
-head(injuries)
+injuries = read.csv("injuries_players2021-11-15.csv") # load data
 ```
 
 ```{r, include=F}
@@ -115,13 +120,13 @@ injuries = injuries %>% mutate(short_team_name = fix_nfl_names(full_team)) %>%
                                height_inches, weight_pounds, birthdate,
                                short_team_name) %>% 
                         filter(position_id != "")
-head(injuries)
 ```
+
+&nbsp;
 
 # P1
 
-'Which positions are most at-risk for injuries?
-We’ll compile basic descriptive statistics on this question'
+### Which positions are most at-risk for injuries? We’ll compile basic descriptive statistics on this question'
 
 ```{r}
 number_injury = injuries %>% group_by(position_id, year) %>% 
@@ -133,25 +138,114 @@ number_injury %>% ggplot(aes(year, n, color = position_id)) +
                     scale_color_discrete(name = "Position")
 
 
-
 ```
 
+&nbsp;
 
-We’ll run logistic regression and other classification models (kNN, random forest, etc.) for predicting injury risk using position as a categorical covariate, and compare results
+### We’ll run logistic regression and other classification models (kNN, random forest, etc.). We will regress the binary variable `injury` on the categorical covariate `position_id`.
+
+&nbsp;
 
 ```{r}
-players = read.csv("all_players_some_injuries2021-11-15.csv")
-head(players)
+players = read.csv("all_players_some_injuries2021-11-16.csv")
 
-players = players %>% mutate(injury = ifelse(is.na(injury_types), 1, 0),
-                             position = as.factor(position))
+players = players %>% 
+            mutate(injury = as.factor(ifelse(is.na(injury_types), 0, 1)), # make binary injury variable
+                   position_id = as.factor(position_id),
+                   bmi = weight_pounds / height_inches^2)
 
 
+# Missing data
+apply(players %>% 
+        select(injury, bmi, height_inches, weight_pounds, position_id), 2, 
+      function(x) sum(is.na(x))) %>% pander
 
-logi_fit = glm(data = players, injury ~ position + height + weight, family = binomial())
+# remove missing values in height/weight/bmi
+players = players %>% filter(!is.na(height_inches), !is.na(weight_pounds))
+```
+
+&nbsp;
+
+### Logistic regression (model only; check for significant coefficients)
+
+```{r}
+logi_fit = glm(data = players, injury ~ position_id + bmi, family = binomial())
 pander(summary(logi_fit))
 
 ```
 
+&nbsp;
+
+# Machine Learning and Prediction
+
+&nbsp;
+
+## Create training and test set
+
+```{r}
+set.seed(1)
+
+x <- stratified(players, "injury", 0.7, keep.rownames = TRUE)
+train_set <- x %>% dplyr::select(-rn)
+train_index <- as.numeric(x$rn)
+test_set <- players[-train_index,]
+
+dim(train_set)
+dim(test_set)
+```
+
+&nbsp;
+
+### Logistic regression
+
+```{r, logistic regression}
+logi_fit = glm(data = train_set, injury ~ position_id + bmi, family = binomial())
+
+p_hat_logit = predict(logi_fit, newdata = test_set, type = "response") # get predicted probabilities
+
+y_hat_logit <- as.factor(ifelse(p_hat_logit > 0.5, 1, 0)) # set threshold of 0.5
+
+confusionMatrix(data = y_hat_logit, 
+                reference = test_set[["injury"]], positive = "1") # generate confusion matrix
+
+```
+
+
+&nbsp;
+
+### k-Nearest Neighbors
+
+```{r kNN}
+# TODO get 'k' through cross-validation
+#k_cv = 
+
+knn_fit = knn3(data = train_set, injury ~ position_id + bmi, k = 11) # fit kNN
+
+f_hat_knn = predict(knn_fit, newdata = test_set)[ , 2] # get probability for death (outcome = 1)
+
+y_hat_knn = as.factor(ifelse(f_hat_knn > 0.5, 1, 0))
+
+confusionMatrix(data = y_hat_knn, 
+                reference = test_set[["injury"]], positive = "1") # generate confusion matrix
+
+```
+
+
+&nbsp;
+
+### Random Forest
+
+```{r Random Forest}
+rf_fit = randomForest(injury ~ position_id + bmi, 
+                      data = players[train_index, ]) # fit random forest using training set
+           
+p_hat_rf = predict(rf_fit, newdata = test_set, type = "prob")[,2] # get predicted probabilities
+
+y_hat_rf = as.factor(ifelse(p_hat_rf > 0.5, 1, 0)) # use 0.5 cutoff to get estimates
+
+confusionMatrix(data = y_hat_rf, 
+                reference = test_set[["injury"]], positive = "1") # generate confusion matrix
+
+```
 
 

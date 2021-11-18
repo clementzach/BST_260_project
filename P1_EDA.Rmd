@@ -1,6 +1,6 @@
 ---
 title: "EDA for P1"
-author: "k-Nearest Tailgaters"
+author: "Addison McGhee"
 date: "`r Sys.Date()`"
 output: html_document
 ---
@@ -111,7 +111,7 @@ fix_nfl_names <- function(x){ #https://rdrr.io/github/papagorgio23/bettoR/src/R/
 ```
 
 
-```{r}
+```{r, include=F}
 injuries = injuries %>% mutate(short_team_name = fix_nfl_names(full_team)) %>% 
                         select(name, full_team, 
                                year, games_in_season, 
@@ -126,23 +126,35 @@ injuries = injuries %>% mutate(short_team_name = fix_nfl_names(full_team)) %>%
 
 # P1
 
-### Which positions are most at-risk for injuries? We’ll compile basic descriptive statistics on this question'
+### Q1: Which positions are most at-risk for injuries? The table below contains descriptive statistics calculated for each position over multiple seasons (2009 - Present). 
 
 ```{r}
 number_injury = injuries %>% group_by(position_id, year) %>% 
                              count()
-                        
+
+number_injury %>% filter(position_id != "WR") %>% 
+  group_by(position_id) %>% 
+  summarise(mean = mean(n), 
+            sd = sd(n), 
+            Q1 = quantile(n, probs = 0.25),
+            median = median(n),
+            Q3 = quantile(n, probs = 0.75)) %>% 
+  pander
+```                                                   
+
+
+```{r}             
 number_injury %>% ggplot(aes(year, n, color = position_id)) +
                     geom_line() +
                     ylab("# of Injuries") +
-                    scale_color_discrete(name = "Position")
-
+                    scale_color_discrete(name = "Position") +
+                    ggtitle("Number of Injuries by Position (2009 - Present)")
 
 ```
 
 &nbsp;
 
-### We’ll run logistic regression and other classification models (kNN, random forest, etc.). We will regress the binary variable `injury` on the categorical covariate `position_id`.
+### We now will switch to another dataset that contains information for both injured and non-injured players. We will perform logistic regression, kNN, and random forest using the binary outcome `injury`. Our predictors will be continuous height/weight/bmi and the categorical variable `position_id`. We will then compare the results of the different methods based on accuracy, sensitivity/specificity, and ROC/AUC.
 
 &nbsp;
 
@@ -151,16 +163,24 @@ players = read.csv("all_players_some_injuries2021-11-16.csv")
 
 players = players %>% 
             mutate(injury = as.factor(ifelse(is.na(injury_types), 0, 1)), # make binary injury variable
-                   position_id = as.factor(position_id),
-                   bmi = weight_pounds / height_inches^2)
+                   position_id = as.factor(position_id), # make position categorical
+                   bmi = weight_pounds / height_inches^2) # make BMI variable
+```
 
+&nbsp;
 
-# Missing data
+### Our first step is to check for missing data in our predictors and outcome
+```{r}
 apply(players %>% 
         select(injury, bmi, height_inches, weight_pounds, position_id), 2, 
       function(x) sum(is.na(x))) %>% pander
+```
 
-# remove missing values in height/weight/bmi
+&nbsp;
+
+### We will now remove missing values in height/weight/bmi
+
+```{r}
 players = players %>% filter(!is.na(height_inches), !is.na(weight_pounds))
 ```
 
@@ -180,7 +200,7 @@ pander(summary(logi_fit))
 
 &nbsp;
 
-## Create training and test set
+### Create training and test set
 
 ```{r}
 set.seed(1)

@@ -258,7 +258,9 @@ confusionMatrix(data = y_hat_knn,
 ```{r Random Forest}
 rf_fit = randomForest(injury ~ position_id + bmi, 
                       data = players[train_index, ]) # fit random forest using training set
-           
+
+rf_fit
+
 p_hat_rf = predict(rf_fit, newdata = test_set, type = "prob")[,2] # get predicted probabilities
 
 y_hat_rf = as.factor(ifelse(p_hat_rf > 0.5, 1, 0)) # use 0.5 cutoff to get estimates

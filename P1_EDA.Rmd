@@ -14,11 +14,13 @@ knitr::opts_chunk$set(echo = TRUE, message = F)
 library(AER)
 library(caret)
 library(e1071)
+library(eeptools)
 library(foreign)
 library(gam)
 library(ggrepel)
 library(ggthemes)
 library(gridExtra)
+library(lubridate)
 library(magrittr)
 library(nnet)
 library(pander)
@@ -108,12 +110,19 @@ fix_nfl_names <- function(x){ #https://rdrr.io/github/papagorgio23/bettoR/src/R/
 
   return(x)
 }
+
+age <- function(dob, age.day = today(), units = "years", floor = TRUE) {
+    calc.age = interval(dob, age.day) / duration(num = 1, units = units)
+    if (floor) return(as.integer(floor(calc.age)))
+    return(calc.age)
+}
 ```
 
 
 ```{r, include=F}
-injuries = injuries %>% mutate(short_team_name = fix_nfl_names(full_team)) %>% 
-                        select(name, full_team, 
+injuries = injuries %>% mutate(short_team_name = fix_nfl_names(full_team),
+                               age = age(ymd(birthdate))) %>% 
+                        select(name, full_team, age,
                                year, games_in_season, 
                                num_games_missing, num_games_injured, injury_types,
                                earliest_injury, latest_injury, position_id, 
@@ -168,7 +177,6 @@ injuries %>% ggplot(aes(year)) +
               geom_bar() + 
               ylab("# of Injuries") +
               ggtitle("# of Injuries per Year")
-  
 ```
 
 &nbsp;
@@ -189,8 +197,9 @@ players = players_dat %>%
             filter(year == 2018) %>% 
             mutate(injury = as.factor(ifelse(is.na(injury_types), 0, 1)), # make binary injury variable
                    position_id = as.factor(position_id), # make position categorical
-                   bmi = weight_pounds / height_inches^2) %>% 
-            filter(position_id != "") # make BMI variable
+                   bmi = weight_pounds / height_inches^2, # make BMI variable
+                   age = age(ymd(birthdate)) - 3) %>% # subtract 3 years to match age in 2018
+            filter(position_id != "")
 
           
 ```
@@ -200,7 +209,7 @@ players = players_dat %>%
 ### Our first step is to check for missing data in our predictors and outcome
 ```{r}
 apply(players %>% 
-        select(injury, bmi, height_inches, weight_pounds, position_id), 2, 
+        select(injury, bmi, height_inches, weight_pounds, position_id, age), 2, 
       function(x) sum(is.na(x))) %>% pander
 ```
 
@@ -224,7 +233,6 @@ number_injury %>%
     ggtitle("# of Injuries by Position in 2018") +
     geom_text(aes(label = n), vjust = -0.5)
   
-
 ```
 
 &nbsp;
@@ -245,10 +253,25 @@ players %>% ggplot(aes(injury, bmi)) +
 
 &nbsp;
 
+### What is the distribution of `injury` by `age` in 2018?
+```{r}
+injuries %>% filter(year == 2018) %>% 
+             mutate(age = age - 3) %>% # make age same as it was in 2018 (3 years ago)
+             ggplot(aes(age)) +
+               geom_histogram(binwidth = 0.5) +
+               xlab("Age") +
+               ylab("# of Injuries") +
+               ggtitle("# of Injuries by Age in 2018") +
+               scale_x_continuous(breaks = seq(0, 50, 1))
+```
+
+&nbsp;
+
+
 ### Logistic regression (model only; check for significant coefficients)
 
 ```{r}
-logi_fit = glm(data = players, injury ~ position_id + bmi, family = binomial())
+logi_fit = glm(data = players, injury ~ position_id + bmi + age, family = binomial())
 pander(summary(logi_fit))
 
 ```
@@ -275,10 +298,12 @@ dim(test_set)
 
 &nbsp;
 
+#### NOTE: Accuracy improved after removing `bmi` as a predictor
+
 ### Logistic regression
 
 ```{r, logistic regression}
-logi_fit = glm(data = train_set, injury ~ position_id + bmi, family = binomial())
+logi_fit = glm(data = train_set, injury ~ position_id + age, family = binomial())
 
 p_hat_logit = predict(logi_fit, newdata = test_set, type = "response") # get predicted probabilities
 
@@ -298,11 +323,27 @@ confusionMatrix(data = y_hat_logit,
 
 ### k-Nearest Neighbors
 
-```{r kNN}
-# TODO get 'k' through cross-validation
-#k_cv = 
+#### Use 2-fold cross-validation to find optimal `k` (achieves the highest accuracy for 0.5 cut-off)
+```{r}
+control <- trainControl(method = 'cv', number = 2, p = .5) # cut-off of 0.5
 
-knn_fit = knn3(data = train_set, injury ~ position_id + bmi, k = 11) # fit kNN
+players2 <- mutate(players, label = injury) %>%
+  select(label, position_id, age)
+
+res <- train(label ~ .,
+             data = players2,
+             method = "knn",
+             trControl = control,
+             tuneLength = 1, # How fine a mesh to go on grid
+             tuneGrid = data.frame(k = seq(3, 151, 2)),
+             metric = "Accuracy")
+
+res$bestTune # best choice of 'k' is k = 5
+plot(res)
+```
+
+```{r kNN}
+knn_fit = knn3(data = train_set, injury ~ position_id + age, k = 5) # fit kNN
 
 f_hat_knn = predict(knn_fit, newdata = test_set)[ , 2] # get probability for injury
 
@@ -313,13 +354,12 @@ confusionMatrix(data = y_hat_knn,
 
 ```
 
-
 &nbsp;
 
 ### Random Forest
 
 ```{r Random Forest}
-rf_fit = randomForest(injury ~ position_id + bmi, 
+rf_fit = randomForest(injury ~ position_id + age, 
                       data = players[train_index, ]) # fit random forest using training set
 
 rf_fit

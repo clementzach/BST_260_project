@@ -1,0 +1,141 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+
+Read in the data set
+```{r}
+injuries <- read.csv("injuries_players2021-11-15.csv")
+```
+
+```{r}
+head(injuries)
+dim(injuries)
+```
+
+```{r}
+injuries <- injuries %>% mutate(injury_types = tolower(injury_types))
+```
+
+```{r}
+# Replace any "/" with " " ?
+injuries$injury_types <- gsub("/", " ", injuries$injury_types)
+```
+
+
+Body part vectors
+```{r}
+Head <- c("concussion", "head", "neck", "eye", "ear", "chin", "migranes", "migrane", "jaw", "nose", "tooth", "stinger", "faciallaceration", "eyelid", "facial", "mouth", "nose", "throat", "seizure")
+
+Shoulder <- c("shoulder", "clavicle", "collarbone", "leftshoulder", "rightshoulder", "jointshoulder", "scapula", "sternoclavicular")
+
+UpperTorso <- c("rib", "back", "pectoral", "pec", "chest", "oblique", "lumbar", "core", "spine", "trapezius", "kidney", "lung", "heart", "abdomen", "abdominal", "solarplexus", "spleen", "hernia", "arrhythmia", "liver", "stomach", "appendix")
+
+LowerTorso <- c("glute", "buttocks", "hip", "righthip", "pelvis", "tailbone")
+
+
+Arm <- c("arm", "rightupperarm", "forearm", "bicep", "biceps", "elbow", "rightelbow", "tricep", "triceps")
+
+Hand <- c("hand", "righthand", "thumb", "rightthumb", "finger", "rightfinger", "wrist", "rightwrist")
+
+Leg <- c("hamstring", "righthamstring", "knee", "rightknee", "acl", "mcl", "meniscus", "bothknees", "thigh", "rightthigh", "calf", "rightcalf", "quadricep", "rightquadricep", "quad", "groin", "rightgroin", "lowerleg", "tibia", "fibula", "shin", "rightshin", "adductor", "contusion")
+
+Foot <- c("foot", "rightfoot", "ankle", "achilles", "toe", "toes", "heel")
+
+
+```
+
+
+Function to count broad body part injuries 
+```{r}
+# Bodypart input must be a string
+broad <- function(bodylist, bodypart) {
+  
+  pasted <- paste(bodylist, collapse = "|")
+  injuries$broad_injury <- gsub(pasted, bodypart, injuries$injury_types)
+  str_count(injuries$broad_injury, pattern = bodypart)
+
+  }
+```
+
+
+
+Calculating broad injury counts
+```{r}
+# Head
+head_counts <- broad(Head, "head")
+
+# Shoulder
+shoulder_counts <- broad(Shoulder, "shoulder")
+
+# Upper Torso
+uppertorso_counts <- broad(UpperTorso, "uppertorso")
+
+# Lower Torso
+lowertorso_counts <- broad(LowerTorso, "lowertorso")
+
+# Arm
+arm_counts <- broad(Arm, "arm")
+
+# Hand
+hand_counts <- broad(Hand, "hand")
+
+# Leg
+leg_counts <- broad(Leg, "leg")
+
+# Foot
+foot_counts <- broad(Foot, "foot")
+
+injuries <- injuries %>% 
+  mutate(head = head_counts) %>%
+  mutate(shoulder = shoulder_counts) %>%
+  mutate(upper_torso = uppertorso_counts) %>%
+  mutate(lower_torso = lowertorso_counts) %>%
+  mutate(arm = arm_counts) %>%
+  mutate(hand = hand_counts) %>%
+  mutate(leg = leg_counts) %>%
+  mutate(foot = foot_counts)
+  
+
+injuries
+```
+
+  
+
+```{r}
+sum(injuries$head)
+sum(injuries$shoulder)
+sum(injuries$upper_torso)
+sum(injuries$lower_torso)
+sum(injuries$arm)
+sum(injuries$hand)
+sum(injuries$leg)
+sum(injuries$foot)
+```
+
+
+
+```{r}
+part <- c("Head", "Shoulder", "Upper Torso", "Lower Torso", "Arm", "Hand", "Leg", "Foot")
+counts <- c(sum(injuries$head), sum(injuries$shoulder), sum(injuries$upper_torso), sum(injuries$lower_torso), sum(injuries$arm), sum(injuries$hand), sum(injuries$leg), sum(injuries$foot))
+
+bodypart_counts <- data.frame(part, counts)
+
+ggplot(bodypart_counts,aes(x = reorder(part,-counts), y= counts)) + 
+  geom_bar(stat ="identity") +
+  xlab("Body Part") +
+  ylab("Count") +
+  ggtitle("Distriubtion of Injuries by Body Part")
+
+bodypart_counts
+```
+
+
+
+
+
+```{r}
+write.csv(injuries,"C:/Users/wduff/OneDrive/School/Harvard/Fall2021/BST260/BST_260_project/cleaneddata.csv", row.names = TRUE)
+```
+

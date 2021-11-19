@@ -201,7 +201,7 @@ players = players_dat %>%
                    age = age(ymd(birthdate)) - 3) %>% # subtract 3 years to match age in 2018
             filter(position_id != "")
 
-          
+
 ```
 
 &nbsp;
@@ -219,25 +219,25 @@ apply(players %>%
 
 &nbsp;
 
-### What is the distribution of injuries by postion in 2018?
+### What is the distribution of injuries by position in 2018?
 
 ```{r}
-number_injury %>% 
-  filter(year == 2018) %>% 
-  ungroup() %>% 
-  mutate(position_id = fct_reorder(position_id, n, .desc = T)) %>% 
-  ggplot(aes(position_id, n)) +
-    geom_col() +
+players$position_id = 
+  fct_relevel(players$position_id, c("DEF", "OL", "WR", "RB", "TE", "QB", "K", "P", ""))
+
+players %>% 
+  ggplot(aes(position_id, fill = injury)) +
+    geom_bar(position = "dodge") +
     xlab("Position") +
-    ylab("# of Injuries") +
-    ggtitle("# of Injuries by Position in 2018") +
-    geom_text(aes(label = n), vjust = -0.5)
+    ylab("# of Players") +
+    ggtitle("Injured Players by Position in 2018") +
+    scale_fill_manual(name = "Injury", guide = guide_legend(reverse=TRUE), values = c("#619CFF", "#F8766D"))
   
 ```
 
 &nbsp;
 
-**We have a clear distinction between groups. The `DEF` category clearly dominates.**
+**The graph above is very useful for determining whether a logistic regression coefficient would likely be statistically significant. We are looking to see, for a given position, if there is a large discrepancy between the number of injured and non-injured players. If the number of players injured is much larger than the number of non-injured players, then we would expect that the odds of getting injured in this position is large. We would expect the opposite to be the case for a position where the number of non-injured players is much greater than the number of injured players.**
 
 &nbsp;
 
@@ -271,9 +271,19 @@ injuries %>% filter(year == 2018) %>%
 ### Logistic regression (model only; check for significant coefficients)
 
 ```{r}
+players = players %>% mutate(position_id = relevel(position_id, ref = "TE"))
+
 logi_fit = glm(data = players, injury ~ position_id + bmi + age, family = binomial())
 pander(summary(logi_fit))
 
+```
+
+&nbsp;
+
+### Why is `DEF` not significant? We see there is almost an even split between injured and non-injured players
+```{r}
+players %>% filter(injury == 1) %>% select(position_id) %>% table() %>% pander(caption = "Injured")
+players %>% filter(injury == 0) %>% select(position_id) %>% table() %>% pander(caption = "non-Injured")
 ```
 
 &nbsp;
@@ -300,7 +310,7 @@ dim(test_set)
 
 #### NOTE: Accuracy improved after removing `bmi` as a predictor
 
-### Logistic regression
+### Logistic regression (using `position_id` and `age` as features)
 
 ```{r, logistic regression}
 logi_fit = glm(data = train_set, injury ~ position_id + age, family = binomial())
@@ -325,6 +335,7 @@ confusionMatrix(data = y_hat_logit,
 
 #### Use 2-fold cross-validation to find optimal `k` (achieves the highest accuracy for 0.5 cut-off)
 ```{r}
+set.seed(1)
 control <- trainControl(method = 'cv', number = 2, p = .5) # cut-off of 0.5
 
 players2 <- mutate(players, label = injury) %>%
@@ -338,12 +349,12 @@ res <- train(label ~ .,
              tuneGrid = data.frame(k = seq(3, 151, 2)),
              metric = "Accuracy")
 
-res$bestTune # best choice of 'k' is k = 5
+res$bestTune # best choice of 'k' is k = 131
 plot(res)
 ```
 
 ```{r kNN}
-knn_fit = knn3(data = train_set, injury ~ position_id + age, k = 5) # fit kNN
+knn_fit = knn3(data = train_set, injury ~ position_id + age, k = 131) # fit kNN using optimal k = 131
 
 f_hat_knn = predict(knn_fit, newdata = test_set)[ , 2] # get probability for injury
 

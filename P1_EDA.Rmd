@@ -1,0 +1,380 @@
+---
+title: "EDA for P1"
+author: "Addison McGhee"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=F}
+knitr::opts_chunk$set(echo = TRUE, message = F)
+```
+
+
+```{r, include=F}
+library(AER)
+library(caret)
+library(e1071)
+library(foreign)
+library(gam)
+library(ggrepel)
+library(ggthemes)
+library(gridExtra)
+library(magrittr)
+library(nnet)
+library(pander)
+library(pROC)
+library(pscl)
+library(randomForest)
+library(rpart)
+library(splines)
+library(splines2)
+library(splitstackshape)
+library(tidyverse)
+library(VGAM)
+library(vcd)
+options(digits = 3)
+theme_update(plot.title = element_text(hjust = 0.5))
+```
+
+```{r}
+injuries = read.csv("injuries_players2021-11-15.csv") # load data
+```
+
+```{r, include=F}
+fix_nfl_names <- function(x){ #https://rdrr.io/github/papagorgio23/bettoR/src/R/fix_nfl_names.R
+  x[grep("Arizona Cardinals", x, ignore.case=TRUE)] <- "ARI"
+  
+  x[grep("Atlanta Falcons", x, ignore.case=TRUE)] <- "ATL"
+
+  x[grep("Baltimore Ravens", x, ignore.case=TRUE)] <- "BAL"
+
+  x[grep("Buffalo Bills", x, ignore.case=TRUE)] <- "BUF"
+
+  x[grep("Carolina Panthers", x, ignore.case=TRUE)] <- "CAR"
+
+  x[grep("Chicago Bears", x, ignore.case=TRUE)] <- "CHI"
+
+  x[grep("Cincinnati Bengals", x, ignore.case=TRUE)] <- "CIN"
+
+  x[grep("Cleveland Browns", x, ignore.case=TRUE)] <- "CLE"
+
+  x[grep("Dallas Cowboys", x, ignore.case=TRUE)] <- "DAL"
+
+  x[grep("Denver Broncos", x, ignore.case=TRUE)] <- "DEN"
+
+  x[grep("Detroit Lions", x, ignore.case=TRUE)] <- "DET"
+
+  x[grep("Green Bay Packers", x, ignore.case=TRUE)] <- "GB"
+
+  x[grep("Houston Texans", x, ignore.case=TRUE)] <- "HOU"
+
+  x[grep("Indianapolis Colts", x, ignore.case=TRUE)] <- "IND"
+
+  x[grep("Jacksonville Jaguars", x, ignore.case=TRUE)] <- "JAX"
+
+  x[grep("Kansas City Chiefs", x, ignore.case=TRUE)] <- "KC"
+
+  x[grep("Miami Dolphins", x, ignore.case=TRUE)] <- "MIA"
+
+  x[grep("Minnesota Vikings", x, ignore.case=TRUE)] <- "MIN"
+
+  x[grep("New England Patriots", x, ignore.case=TRUE)] <- "NE"
+
+  x[grep("New Orleans Saints", x, ignore.case=TRUE)] <- "NO"
+
+  x[grep("New York Jets", x, ignore.case=TRUE)] <- "NYJ"
+
+  x[grep("New York Giants", x, ignore.case=TRUE)] <- "NYG"
+
+  x[grep("Las Vegas Raiders", x, ignore.case=TRUE)] <- "OAK"
+
+  x[grep("Philadelphia Eagles", x, ignore.case=TRUE)] <- "PHI"
+
+  x[grep("Pittsburgh Steelers", x, ignore.case=TRUE)] <- "PIT"
+
+  x[grep("Los Angeles Chargers", x, ignore.case=TRUE)] <- "LAC"
+
+  x[grep("Los Angeles Rams", x, ignore.case=TRUE)] <- "LAR"
+
+  x[grep("San Francisco 49ers", x, ignore.case=TRUE)] <- "SF"
+
+  x[grep("Seattle Seahawks", x, ignore.case=TRUE)] <- "SEA"
+
+  x[grep("Tampa Bay Buccaneers", x, ignore.case=TRUE)] <- "TB"
+
+  x[grep("Tennessee Titans", x, ignore.case=TRUE)] <- "TEN"
+
+  x[grep("Washington Redskins", x, ignore.case=TRUE)] <- "WAS"
+
+  return(x)
+}
+```
+
+
+```{r, include=F}
+injuries = injuries %>% mutate(short_team_name = fix_nfl_names(full_team)) %>% 
+                        select(name, full_team, 
+                               year, games_in_season, 
+                               num_games_missing, num_games_injured, injury_types,
+                               earliest_injury, latest_injury, position_id, 
+                               height_inches, weight_pounds, birthdate,
+                               short_team_name) %>% 
+                        filter(position_id != "")
+
+
+```
+
+
+```{r}
+
+table(injuries$position_id)
+```
+
+&nbsp;
+
+# P1
+
+### Q1: Which positions are most at-risk for injuries? The table below contains descriptive statistics calculated for each position over multiple seasons (2009 - Present). 
+
+```{r}
+number_injury = injuries %>% group_by(position_id, year) %>% 
+                             count()
+
+number_injury %>% filter(position_id != "WR") %>% 
+  group_by(position_id) %>% 
+  summarise(mean = mean(n), 
+            sd = sd(n), 
+            Q1 = quantile(n, probs = 0.25),
+            median = median(n),
+            Q3 = quantile(n, probs = 0.75)) %>% 
+  pander
+```                                                   
+
+
+```{r}             
+number_injury %>% ggplot(aes(year, n, color = position_id)) +
+                    geom_line() +
+                    xlab("Year") +
+                    ylab("# of Injuries") +
+                    scale_color_discrete(name = "Position") +
+                    ggtitle("Number of Injuries by Position (2009 - Present)")
+```
+
+&nbsp;
+
+### What about injuries per year? Is this uniformly distributed?
+```{r}
+injuries %>% ggplot(aes(year)) + 
+              geom_bar() + 
+              ylab("# of Injuries") +
+              ggtitle("# of Injuries per Year")
+  
+```
+
+&nbsp;
+
+### We now will switch to another dataset that contains information for both injured and non-injured players. 
+* For the next analyses, we will only look at the **2018** season
+* We will perform logistic regression, kNN, and random forest using the binary outcome `injury`. 
+* Our predictors will be continuous bmi and the categorical variable `position_id`. 
+* We will then compare the results of the different methods based on accuracy, sensitivity/specificity, and ROC/AUC.
+
+
+&nbsp;
+
+```{r}
+players_dat = read.csv("all_players_some_injuries2021-11-16.csv")
+
+players = players_dat %>% 
+            filter(year == 2018) %>% 
+            mutate(injury = as.factor(ifelse(is.na(injury_types), 0, 1)), # make binary injury variable
+                   position_id = as.factor(position_id), # make position categorical
+                   bmi = weight_pounds / height_inches^2) %>% 
+            filter(position_id != "") # make BMI variable
+
+          
+```
+
+&nbsp;
+
+### Our first step is to check for missing data in our predictors and outcome
+```{r}
+apply(players %>% 
+        select(injury, bmi, height_inches, weight_pounds, position_id), 2, 
+      function(x) sum(is.na(x))) %>% pander
+```
+
+&nbsp;
+
+**Fortunately, there are no missing observations for these features in the 2018 season.**
+
+&nbsp;
+
+### What is the distribution of injuries by postion in 2018?
+
+```{r}
+number_injury %>% 
+  filter(year == 2018) %>% 
+  ungroup() %>% 
+  mutate(position_id = fct_reorder(position_id, n, .desc = T)) %>% 
+  ggplot(aes(position_id, n)) +
+    geom_col() +
+    xlab("Position") +
+    ylab("# of Injuries") +
+    ggtitle("# of Injuries by Position in 2018") +
+    geom_text(aes(label = n), vjust = -0.5)
+  
+
+```
+
+&nbsp;
+
+**We have a clear distinction between groups. The `DEF` category clearly dominates.**
+
+&nbsp;
+
+### What is the distribution of BMI for the injured vs non-injured players?
+```{r}
+players %>% ggplot(aes(injury, bmi)) +
+              geom_boxplot()
+```
+
+&nbsp;
+
+**The absence of any significant difference between groups suggests that `bmi` will not be a significiant predictor in our Logistic model.**
+
+&nbsp;
+
+### Logistic regression (model only; check for significant coefficients)
+
+```{r}
+logi_fit = glm(data = players, injury ~ position_id + bmi, family = binomial())
+pander(summary(logi_fit))
+
+```
+
+&nbsp;
+
+# Machine Learning and Prediction
+
+&nbsp;
+
+### Create training and test set
+
+```{r}
+set.seed(1)
+
+x <- stratified(players, "injury", 0.7, keep.rownames = TRUE)
+train_set <- x %>% dplyr::select(-rn)
+train_index <- as.numeric(x$rn)
+test_set <- players[-train_index,]
+
+dim(train_set)
+dim(test_set)
+```
+
+&nbsp;
+
+### Logistic regression
+
+```{r, logistic regression}
+logi_fit = glm(data = train_set, injury ~ position_id + bmi, family = binomial())
+
+p_hat_logit = predict(logi_fit, newdata = test_set, type = "response") # get predicted probabilities
+
+y_hat_logit <- as.factor(ifelse(p_hat_logit > 0.5, 1, 0)) # set threshold of 0.5
+
+confusionMatrix(data = y_hat_logit, 
+                reference = test_set[["injury"]], positive = "1") # generate confusion matrix
+
+```
+
+
+&nbsp;
+
+
+
+&nbsp;
+
+### k-Nearest Neighbors
+
+```{r kNN}
+# TODO get 'k' through cross-validation
+#k_cv = 
+
+knn_fit = knn3(data = train_set, injury ~ position_id + bmi, k = 11) # fit kNN
+
+f_hat_knn = predict(knn_fit, newdata = test_set)[ , 2] # get probability for injury
+
+y_hat_knn = as.factor(ifelse(f_hat_knn > 0.5, 1, 0))
+
+confusionMatrix(data = y_hat_knn, 
+                reference = test_set[["injury"]], positive = "1") # generate confusion matrix
+
+```
+
+
+&nbsp;
+
+### Random Forest
+
+```{r Random Forest}
+rf_fit = randomForest(injury ~ position_id + bmi, 
+                      data = players[train_index, ]) # fit random forest using training set
+
+rf_fit
+
+p_hat_rf = predict(rf_fit, newdata = test_set, type = "prob")[,2] # get predicted probabilities
+
+y_hat_rf = as.factor(ifelse(p_hat_rf > 0.5, 1, 0)) # use 0.5 cutoff to get estimates
+
+confusionMatrix(data = y_hat_rf, 
+                reference = test_set[["injury"]], positive = "1") # generate confusion matrix
+
+```
+
+&nbsp;
+
+&nbsp;
+
+```{r, message=FALSE}
+roc_logi = roc(test_set[["injury"]], p_hat_logit) # ROC curve creation
+roc_knn = roc(test_set[["injury"]], f_hat_knn)
+roc_rf = roc(test_set[["injury"]], p_hat_rf)
+
+ggroc(list("Logistic Regression" = roc_logi, "kNN, k = 11" = roc_knn, "Random Forest" = roc_rf)) +
+  theme(legend.title = element_blank()) +
+  geom_segment(aes(x = 1, xend = 0, y = 0, yend = 1), color = "black", linetype = "dashed") +
+  xlab("Sensitivity") +
+  ylab("Specificity") 
+
+```
+
+
+```{r}
+auc(roc_logi) # calculate AUC for each ROC curve
+auc(roc_knn)
+auc(roc_rf)
+```
+
+&nbsp;
+
+
+
+## Multinomial Outcome
+
+**We will now return to the original `injuries` dataset. The goal now will be to now categorize the injury types to a new factor with multiple levels. This type of outcome is often used for multinomial regression. To maintain independence of observations, we will only examine injuries from the 2018 season.**
+
+```{r}
+'injuries_2018 = injuries %>% filter(year == 2018) %>% 
+                      mutate(multi_injury = 
+                               case_when(
+                                 
+                                )
+                               )'
+```
+
+
+
+
+

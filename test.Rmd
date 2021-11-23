@@ -1,0 +1,237 @@
+---
+title: "Lauren EDA"
+author: "Lauren Mock"
+date: "11/16/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, message=FALSE}
+library(tidyverse)
+library(ggplot2)
+```
+
+# **Trends In Injuries Over Time**
+
+
+## Read in and clean injury data
+
+```{r}
+injuries <- read.csv("cleaneddata.csv", stringsAsFactors = FALSE)
+
+# remove first two columns
+injuries <- select(injuries, -c(X.1,X))
+
+# add column for total injuries
+injuries <- injuries %>%
+  mutate(all_injuries = rowSums(injuries[,27:34]))
+
+# filter out 2021 (partial data)
+injuries <- injuries %>% filter(year != 2021)
+```
+
+
+## Make a column for adjusted injuries
+(adjusted by number of games in the season and number of players in this data set)
+
+```{r}
+year_games <- injuries %>%
+  distinct(year, games_in_season, team)
+
+```
+
+**I'm confused!!!**
+
+also need to know--are years seasons?
+
+
+## Injuries per Season
+
+```{r}
+time_series <- injuries %>%
+  group_by(year) %>%
+  summarize(all_injuries = sum(all_injuries))
+
+time_series %>%
+  ggplot(aes(x = year, y = all_injuries)) +
+  geom_line() +
+  ggtitle("Injuries per Season") +
+  xlab("Year") +
+  ylab("Total Number of Injuries") +
+  ylim(0, 2800)
+```
+
+
+Injuries per Season by Team
+
+```{r}
+time_series_teams <- injuries %>%
+  group_by(year, team) %>%
+  summarize(all_injuries = sum(all_injuries))
+
+time_series_teams %>%
+  ggplot(aes(x = year, y = all_injuries, color = team)) +
+  geom_line() +
+  ggtitle("Injuries per Season by Team") +
+  xlab("Year") +
+  ylab("Total Number of Injuries") +
+  ylim(0, 200)
+```
+
+Boxplots
+
+```{r}
+injuries %>%
+  ggplot(aes(x = as.factor(year), y = all_injuries)) +
+  geom_boxplot() +
+  ggtitle("Distribution of Number of Injuries per Player") +
+  xlab("Year") +
+  ylab("Injuries per Season per Player")
+```
+
+
+
+## Concussions per Season
+
+```{r}
+concussions <- injuries %>%
+  group_by(year) %>%
+  summarize(head = sum(head))
+
+
+concussions %>%
+  ggplot(aes(x = year, y = head)) +
+  geom_line() +
+  ggtitle("Concussions per Season") +
+  xlab("Year") +
+  ylab("Total Number of Injuries") +
+  ylim(0, 300)
+```
+
+
+Concussions per Season by Team
+
+```{r}
+concussions_team <- injuries %>%
+  group_by(year, team) %>%
+  summarize(head = sum(head))
+
+
+concussions_team %>%
+  ggplot(aes(x = year, y = head, color = team)) +
+  geom_line() +
+  ggtitle("Concussions per Season") +
+  xlab("Year") +
+  ylab("Total Number of Injuries") +
+  ylim(0, 20)
+```
+
+
+## All Injury Types over Time
+
+```{r}
+gathered <- injuries %>%
+  gather(key = broad_injury, value = broad_count, 27:34)
+
+gathered <- gathered %>%
+  group_by(year, broad_injury) %>%
+  summarise(broad_count = sum(broad_count))
+
+gathered %>%
+  ggplot(aes(x = year, y = broad_count, color = broad_injury)) +
+  geom_line() +
+  ggtitle("Injuries per Season by Type") +
+  xlab("Year") +
+  ylab("Injuries per Season")
+```
+
+...as a barplot
+
+```{r}
+gathered %>%
+  ggplot(aes(x = year, y = broad_count, fill = broad_injury)) +
+  geom_bar(stat = "identity") + 
+  ggtitle("Injury Type by Year") +
+  xlab("Year") +
+  ylab("Number of Injuries") +
+  labs(fill = "Injury Type") +
+  scale_color_hue(labels = c("Arm", "Foot", "Hand", "Head", "Leg", "Lower Torso", 
+                                "Shoulder", "Upper Torso"))
+
+gathered %>%
+  ggplot(aes(x = year, y = broad_count, fill = broad_injury)) +
+  geom_bar(stat = "identity", position = "dodge") + 
+  ggtitle("Injury Type by Year") +
+  xlab("Year") +
+  ylab("Number of Injuries") +
+  labs(fill = "Injury Type") +
+  scale_color_hue(labels = c("Arm", "Foot", "Hand", "Head", "Leg", "Lower Torso", 
+                                "Shoulder", "Upper Torso"))
+```
+
+```{r}
+injuries %>%
+  group_by(year) %>%
+  summarize(players = n()) %>%
+  ggplot(aes(x = year, y = players)) +
+  geom_line() +
+  ylim(0, 1600) +
+  ggtitle("Number of Players in Dataset Each Season")
+
+```
+
+
+
+
+
+## Can we use Poisson regression to predict # of injuries?
+
+```{r, fig.height = 2, fig.width=12}
+injuries %>%
+  ggplot(aes(x = all_injuries)) + 
+  geom_histogram(binwidth = 1, col = "black", fill = "skyblue")
+
+injuries %>%
+  ggplot(aes(x = all_injuries)) + 
+  geom_histogram(binwidth = 1, col = "black", fill = "skyblue") +
+  facet_grid(. ~ year)
+```
+
+
+
+```{r}
+
+
+poisson_fit <- glm(all_injuries ~ as.factor(year), family = poisson, data = time_series)
+summary(poisson_fit)
+```
+
+
+
+
+same number of players in the NFL every year? check as % of players
+tricky b/c we don't have everyone in this dataset
+- need to confirm that this isn't dependent on year, like we on
+
+
+things to look at:
+- concussions by year
+- maybe look at other types of injury by year too
+- time series
+- avg. # of games missed by each player each season due to injuries
+- should adjust for # of games in season!
+- date of earliest injury
+
+
+**ARE YEARS SEASONS??**
+
+
+- work with Addison
+- talk about Poisson with Dan
+- adjust for games per year, not # of players (unless Zach gives just regular season!)
+- use other file with only injured people for Willow's thing
+
+

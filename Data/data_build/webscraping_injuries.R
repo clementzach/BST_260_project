@@ -24,6 +24,7 @@ team_names <-
 current_year_list <- list()
 
 for (year in 2009:2021) {
+print(year)
   current_teams_list <- list()
   for (team in team_names) {
     Sys.sleep(5) #not hammer his servers too badly

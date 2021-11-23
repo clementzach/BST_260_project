@@ -18,7 +18,7 @@ for (year in names(current_year_list)) {
       as.data.frame() %>%  #so as.list creates one list item for each col
       as.list()
     
-    games_in_season = ncol(current_df) - 2
+    games_in_season = min(ncol(current_df) - 2, 16)
     
     num_games_missing <-
       sapply(df_as_list, function(x) {
@@ -31,12 +31,13 @@ for (year in names(current_year_list)) {
     earliest_injury <-
       sapply(df_as_list, function(x) {
         max( #in case it returns -inf
-          min(which(!(x == ''))), 
+          min(0, which(!(x == ''))), 
             0)
       })
     latest_injury <-
       sapply(df_as_list, function(x) {
-        min(max(which(!(x == ''))), #in case it returns inf
+        min(
+          max(games_in_season, which(!(x == ''))), #in case it returns inf
             games_in_season)
       })
     injury_types <- sapply(df_as_list, function(x) {

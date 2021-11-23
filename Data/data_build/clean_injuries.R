@@ -45,7 +45,10 @@ injuries <- injuries %>% mutate(name = sapply(Player, function(x){full = str_spl
 
 upper_duplicates <- which(duplicated(injuries[,c('name', "year", "team")]))
 
-injuries <- injuries[-upper_duplicates,] #get rid of higher index
+injuries <- injuries[-upper_duplicates,] %>%  #get rid of higher index
+  select(name, full_team, team, year, games_in_season, num_games_injured,
+         num_games_missing, injury_types, earliest_injury, latest_injury) 
+#hopefully this order makes pretty good sense
 
 
 
@@ -123,6 +126,8 @@ injuries <- injuries %>%
   mutate(foot = foot_counts)
 
  
-write.csv(injuries,"../all_injuries_clean.csv", row.names = TRUE)
+write.csv(injuries,
+          "../all_injuries_clean.csv", 
+          row.names = F)
  
 

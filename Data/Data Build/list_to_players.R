@@ -13,7 +13,8 @@ for (year in names(current_year_list)) {
     df_as_list <- current_df %>%
       select(-c(Player_id, Player)) %>%
       as.matrix(nrow = nrow(current_df)) %>%
-      t() %>%
+      .[,1:min(ncol(current_df) - 2, 16)] %>% ## remove post-season games
+      t() %>% #one col for each player
       as.data.frame() %>%  #so as.list creates one list item for each col
       as.list()
     

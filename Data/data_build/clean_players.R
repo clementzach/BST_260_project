@@ -61,7 +61,7 @@ players_small <- players_small[-duplicates,] %>% #get rid of duplicated
 
 
 write.csv(players_small, 
-          "all_player_demographic_clean.csv",
+          "../all_player_demographic_clean.csv",
           row.names = F)
 
 

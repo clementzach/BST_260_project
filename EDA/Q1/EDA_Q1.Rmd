@@ -267,6 +267,46 @@ injuries %>% filter(year == 2018) %>%
 
 &nbsp;
 
+## Scale by number of players in each age group
+```{r}
+
+
+
+
+
+
+
+
+```
+
+&nbsp;
+
+## Try side by side bars for age
+```{r}
+players %>% mutate(age = age - 3) %>% 
+            ggplot(aes(age, fill = injury)) +
+              geom_histogram(binwidth = 0.5, position = "dodge") +
+              xlab("Age") +
+              ylab("# of Injuries") +
+              ggtitle("# of Injuries by Age in 2018") +
+              scale_x_continuous(breaks = seq(0, 50, 1)) +
+              scale_fill_manual(name = "Injury", 
+                                guide = guide_legend(reverse=TRUE), values = c("#619CFF", "#F8766D"))
+  
+              
+            
+
+
+```
+
+&nbsp;
+
+## Try quadratic age
+```{r}
+
+```
+
+&nbsp;
 
 ### Logistic regression (model only; check for significant coefficients)
 

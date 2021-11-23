@@ -10,14 +10,17 @@ for (year in names(current_year_list)) {
   for (team in names(current_year_list[[year]])) {
     current_df <- current_year_list[[year]][[team]]
     
+    games_in_season = min(ncol(current_df) - 2, 16)
+    
     df_as_list <- current_df %>%
       select(-c(Player_id, Player)) %>%
       as.matrix(nrow = nrow(current_df)) %>%
-      t() %>%
+      .[,1:games_in_season] %>% ## remove post-season games
+      t() %>% #one col for each player
       as.data.frame() %>%  #so as.list creates one list item for each col
-      as.list()
+      as.list() 
     
-    games_in_season = ncol(current_df) - 2
+    
     
     num_games_missing <-
       sapply(df_as_list, function(x) {
@@ -29,14 +32,25 @@ for (year in names(current_year_list)) {
       })
     earliest_injury <-
       sapply(df_as_list, function(x) {
-        max( #in case it returns -inf
-          min(which(!(x == ''))), 
-            0)
+        injury_times <- which(!(x == ''))
+        if(length(injury_times) == 0){
+          return(NA)
+        }
+        else{
+          return(min(injury_times))
+        }
+
       })
     latest_injury <-
       sapply(df_as_list, function(x) {
-        min(max(which(!(x == ''))), #in case it returns inf
-            games_in_season)
+        injury_times <- which(!(x == ''))
+        if(length(injury_times) == 0){
+          return(NA)
+        }
+        else{
+          return(max(injury_times))
+        }
+
       })
     injury_types <- sapply(df_as_list, function(x) {
       injury <- sapply(x, function(x) {
@@ -81,3 +95,5 @@ for (year in names(current_year_list)) {
 }
 
 write.csv(full_df, "injuries_2009_2021.csv")
+
+

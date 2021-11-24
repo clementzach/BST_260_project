@@ -10,6 +10,7 @@ library(dplyr)
 library(stringr)
 library(tidytext)
 library(gsubfn)
+library(ggplot2)
 ```
 
 
@@ -26,7 +27,7 @@ Create a Shiny app showing summary data
 
 Read in the data set
 ```{r}
-injuries <- read.csv("injuries_only.csv")
+injuries <- read.csv("C:/Users/wduff/OneDrive/School/Harvard/Fall2021/BST260/BST_260_project/Data/injuries_only.csv")
 ```
 
 ```{r}

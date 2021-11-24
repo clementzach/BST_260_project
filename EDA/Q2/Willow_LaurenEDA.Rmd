@@ -1,6 +1,8 @@
 ---
 title: "R Notebook"
-output: html_notebook
+output:
+  html_document:
+    df_print: paged
 ---
 
 
@@ -16,7 +18,7 @@ library(tidyr)
 
 Read in the data set
 ```{r}
-injuries <- read.csv("injuries_players2021-11-15.csv")
+injuries <- read.csv("C:/Users/wduff/OneDrive/School/Harvard/Fall2021/BST260/BST_260_project/Data/injuries_only.csv")
 ```
 
 ```{r}

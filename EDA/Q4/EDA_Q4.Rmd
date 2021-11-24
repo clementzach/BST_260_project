@@ -2,7 +2,7 @@
 title: "Lauren EDA"
 author: "Lauren Mock"
 date: "11/16/2021"
-output: pdf_document
+output: html_document
 ---
 
 ```{r setup, include=FALSE}
@@ -39,7 +39,7 @@ injuries <- injuries %>% filter(year != 2021)
 
 ```{r}
 year_games <- injuries %>%
-  distinct(year, games_in_season)
+  distinct(year, games_in_season, team)
 
 ```
 
@@ -192,15 +192,23 @@ injuries %>%
 ```{r, fig.height = 2, fig.width=12}
 injuries %>%
   ggplot(aes(x = all_injuries)) + 
-  geom_histogram(binwidth = 1, col = "white") +
+  geom_histogram(binwidth = 1, col = "black", fill = "skyblue")
+
+injuries %>%
+  ggplot(aes(x = all_injuries)) + 
+  geom_histogram(binwidth = 1, col = "black", fill = "skyblue") +
   facet_grid(. ~ year)
 ```
 
-try Poisson regression
+
 
 ```{r}
 
+
+poisson_fit <- glm(all_injuries ~ as.factor(year), family = poisson, data = time_series)
+summary(poisson_fit)
 ```
+
 
 
 
@@ -219,4 +227,11 @@ things to look at:
 
 
 **ARE YEARS SEASONS??**
+
+
+- work with Addison
+- talk about Poisson with Dan
+- adjust for games per year, not # of players (unless Zach gives just regular season!)
+- use other file with only injured people for Willow's thing
+
 

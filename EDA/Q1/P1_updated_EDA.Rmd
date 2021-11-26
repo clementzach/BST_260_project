@@ -300,8 +300,8 @@ head(injured_age_group_size)
 injured_age_group_size %>% ggplot(aes(age, scaled_n)) +
                             geom_col() +
                             xlab("Age") +
-                            ylab("Scaled # of Injuries") +
-                            ggtitle("# of Injuries Scaled by Age Group Size in 2018") +
+                            ylab("Percentage") +
+                            ggtitle("Percentage of Players Injured by Age Group") +
                             scale_x_continuous(breaks = seq(0, 50, 1)) +
                             scale_fill_manual(name = "Injury", 
                               guide = guide_legend(reverse=TRUE), values = c("#619CFF", "#F8766D"))

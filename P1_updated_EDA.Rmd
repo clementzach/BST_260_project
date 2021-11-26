@@ -198,7 +198,7 @@ number_injury %>% ggplot(aes(year, n, color = position_id)) +
 
 &nbsp;
 
-### Maybe a $log_{10}$ transform could help
+### Maybe a $\log_{10}$ transform could help
 ```{r}             
 number_injury %>% ggplot(aes(year, n, color = position_id)) +
                     geom_line() +

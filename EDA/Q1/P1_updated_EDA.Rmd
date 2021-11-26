@@ -39,7 +39,7 @@ theme_update(plot.title = element_text(hjust = 0.5))
 ```
 
 ```{r}
-injuries = read.csv("injuries_players2021-11-15.csv") # load data
+injuries = read.csv("all_injuries_clean.csv") # load data
 ```
 
 ```{r, include=F}
@@ -191,7 +191,7 @@ injuries %>% ggplot(aes(year)) +
 &nbsp;
 
 ```{r}
-players_dat = read.csv("all_players_some_injuries2021-11-16.csv")
+players_dat = read.csv("all_player_demographic_clean.csv")
 
 players = players_dat %>% 
             filter(year == 2018) %>% 

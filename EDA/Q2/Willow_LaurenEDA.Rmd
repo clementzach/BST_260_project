@@ -207,9 +207,6 @@ defense %>%
 
 
 
-RSHINY: Dropbox (all injuries, offensive injuries, defensive injuries)
-Slider (age) ?? min, max 
-
 
 ```{r}
 injury_gather %>% 
@@ -286,4 +283,27 @@ injury_age %>%
   ylab("Count") +
   ggtitle("Distriubtion of Injuries 37 Year Old NFL players")
 ```
+
+
+```{r}
+new <- injury_age %>% select(age)
+range(new %>% drop_na())
+
+which(new$age == 75)
+new[1238,]
+
+which(injury_age$age == 75)
+injury_age[1238,]
+
+injuries[1238,]
+```
+
+
+Shiny App:
+Drop down menu --> all players, offensive players, defensive players
+Numeric scale of age --> Give distribution based on age
+Another dropdown menu? --> just specific offensive positions
+Time varying counts? --> injury counts based on year
+
+
 

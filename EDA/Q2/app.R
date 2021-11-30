@@ -62,3 +62,4 @@ shinyApp(ui = ui, server = server)
 
 #Still need to fix axis & title label to include input$age
 #Change theme
+#Include text explaining what the app does

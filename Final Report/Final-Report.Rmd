@@ -9,4 +9,45 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-# To fill in.
+
+# Must inlcude these components
+
+### Overview and Motivation: Provide an overview of the project goals and the motivation for it. Consider that this will be read by people who did not see your project proposal.
+
+We are a team of athletes and sports lovers, so we were interested in using data to research a problem in the world of professional sports. We decided to examine NFL injuries since particular injuries are common in football at the professional level, and their incidence and severity play a large role in determining the players’ comeback to play and a team’s success. Injuries don’t occur at random; we’d like to deduce some patterns underlying injury incidence to better understand the risks involved for players and teams. 
+
+
+### Related Work: Anything that inspired you, such as a paper, a web site, or something we discussed in class.
+
+What inspired us most was a conversation we all had about the severity and even controversial topic of helmet protection/concussions in the NFL. We wondered if head injuries were the most common injuries among NFL players and if concussion injuries decreased once new rules and technology were introduced in 2017. From there, we explored more topics within the NFL injury realm including predicting injuries based on various explanatory variables and running several ???logistical??? models. 
+
+
+
+
+### Initial Questions: What questions are you trying to answer? How did these questions evolve over the course of the project? What new questions did you consider in the course of your analysis?
+
+
+
+
+
+### Data: Source, scraping method, cleanup, etc.
+
+Source & Scraping method --> Zach
+
+Once the data was scraped, there were issues with the free text in the injury column. In order to work with this data set to answer some of our primary questions, we needed to clean the data in such a way that the injuries could be easily modeled and analyzed. With so many injuries initially reported, as seen in the exploratory analysis below, we grouped the injuries into 8 main categories based on a part of the body. These included: Head, Shoulder, Upper Torso, Lower Torso, Arm, Hand, Leg and Foot. This way, the distribution of injuries was much easier to evaluate and draw conclusions from all while still keeping the injury data significant to each player. Once this decision was made, we went about the cleanup of the free text by first removing any special characters separating injuries from each other (mostly "\") and replacing them with a space. Many injuries were read like : "knee arm concussion head" as one large string. To deal with this issue we created a code and function that allowed each specific injury to be re-coded in its appropriate category. For example the above string would be recoded as "leg arm head head". Therefore we classified this player as having 1 leg injury, 1 arm injury and 2 head injuries. Once the injuries were re-coded, we used the mutate() function and created count columns for each of 8 body part injuries summing up how many of those injuries each player had. Once this was complete, we used the group_by() function and the summarise() function to obtain the the total counts of each body part injury. This way, we were able to move forward with answering some of our primary questions with a data set that was usable. 
+
+
+### Exploratory Analysis: What visualizations did you use to look at your data in different ways? What are the different statistical methods you considered? Justify the decisions you made, and show any major changes to your ideas. How did you reach these conclusions?
+
+Have to put in some code here, maybe we can meet one day and fill this out together so it doesn't get too confusing?
+
+Willow Include: Initial EDA with no cleanup, new EDA with cleanup (for all players), EDA based on Offense or Defense, EDA based on age, EDA based on year
+
+
+
+### Final Analysis: What did you learn about the data? How did you answer the questions? How can you justify your answers? Note that 1 type of analysis per team member is required. A Shiny app counts as a type of analysis.
+
+
+I'm thinking everyone can put down what they discovered for their analysis here 
+
+

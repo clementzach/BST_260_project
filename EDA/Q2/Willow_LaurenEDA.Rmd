@@ -279,6 +279,11 @@ injury_age %>%
   summarise(counts = sum(counts)) %>%
   ggplot(aes(x = reorder(bodypart, - counts), y = counts)) +
   geom_col() +
+  theme(
+    axis.title.x = element_text(size = 14),
+    axis.title.y = element_text(size = 14),
+    title = element_text(size = 18)
+    ) +
   xlab("Age = 37 Years") +
   ylab("Count") +
   ggtitle("Distriubtion of Injuries 37 Year Old NFL players")
@@ -293,9 +298,28 @@ which(new$age == 75)
 new[1238,]
 
 which(injury_age$age == 75)
+
+
+
+#This guy is actually born in 1979 - same name as a guy born in 1945
 injury_age[1238,]
 
-injuries[1238,]
+#same guy
+injury_age[18600, ]
+
+injury_age[35962, ]
+
+injury_age[53324, ]
+injury_age[70686, ]
+
+injury_age[88048, ]
+injury_age[105410, ]
+injury_age[122772, ]
+
+#For every time D.D. Lewis 'name' observation, we need to change the 'birthdate' to 1979-01-08
+
+#temp <- injury_age %>% ifelse(name == "D.D. Lewis", birthdate == "1979-01-08", )
+
 ```
 
 

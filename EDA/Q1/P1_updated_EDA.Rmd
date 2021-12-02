@@ -197,7 +197,7 @@ number_injury %>% filter(position_id != "WR") %>%
 
 
 ```{r}             
-number_injury %>% ggplot(aes(year, n, color = position_id)) +
+number_injury1 %>% ggplot(aes(year, n, color = position_id)) +
                     geom_line() +
                     xlab("Year") +
                     ylab("# of Injuries") +

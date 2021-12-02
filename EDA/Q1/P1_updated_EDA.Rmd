@@ -47,8 +47,7 @@ demographics = read.csv("../../Data/all_player_demographic_clean.csv")
 # add column for total number of injuries for each player each year
 injured <- injured %>%
   mutate(all_injuries = select(injured, c("head", "shoulder", "upper_torso", "lower_torso", 
-                                           "arm", "hand", "leg", "foot")) %>% 
-           rowSums)
+                                           "arm", "hand", "leg", "foot")) %>% rowSums)
 
 # join with demographic data
 injuries = full_join(injured, demographics, by = c("name", "full_team", "team", "year"))
@@ -179,6 +178,8 @@ table(injuries$position_id)
 number_injury <- injuries %>%
   group_by(year, position_id) %>%
   summarize(n = sum(all_injuries, na.rm = TRUE))
+
+pander(number_injury)
 
 number_injury %>% filter(position_id != "WR") %>% 
   group_by(position_id) %>% 

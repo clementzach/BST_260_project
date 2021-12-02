@@ -9,6 +9,13 @@
 
 library(shiny)
 
+
+offensive_position <- c("K", "OL", "P", "QB", "RB", "TE", "WR")
+
+offense <- injury_gather %>% filter(position_id %in% offensive_position)
+defense <- injury_gather %>% filter(position_id == "DEF") 
+
+
 # Define UI for application that draws a histogram
 ui <- fluidPage(
 
@@ -17,19 +24,19 @@ ui <- fluidPage(
     # Application title
     titlePanel("Injury Counts in the NFL"),
 
-    # Sidebar with a slider input for number of bins 
+    # Sidebar 
     sidebarLayout(
+        
+        #Widget for selection
         sidebarPanel(
-            sliderInput("age",
-                        "Age:",
-                        min = 21,
-                        max = 75,
-                        value = 37)
+            #Radio buttons that allow the user to select one
+            radioButtons("position", label = "Select Category of Players:",
+                         choices = c("All Players", "Offense", "Defense"))
         ),
 
-        # Show a plot of the generated distribution
+        # Main panel
         mainPanel(
-           plotOutput("agehist")
+           plotOutput("poshist")
         )
     )
 )
@@ -37,22 +44,40 @@ ui <- fluidPage(
 # Define server logic required to draw a histogram
 server <- function(input, output) {
 
-    output$agehist <- renderPlot({
-        injury_age %>% 
-            group_by(bodypart) %>%
-            filter(age == input$age) %>%
-            summarise(counts = sum(counts)) %>%
-            ggplot(aes(x = reorder(bodypart, - counts), y = counts)) +
-            geom_col() +
-            theme(
-                axis.title.x = element_text(size = 15),
-                axis.title.y = element_text(size = 15),
-                title = element_text(size = 22),
-                plot.title = element_text(hjust = 0.5)
-            ) +
-            xlab("Injuries") +
-            ylab("Count") +
-            ggtitle("Distriubtion of Injuries for NFL players")
+    output$poshist <- renderPlot({
+        if (input$position == "All Players") {
+            injury_gather %>%
+                group_by(bodypart) %>%
+                summarise(counts = sum(counts)) %>%
+                ggplot(aes(x = reorder(bodypart, - counts), y = counts)) +
+                geom_col() +
+                theme(
+                    axis.title.x = element_text(size = 15),
+                    axis.title.y = element_text(size = 15),
+                    title = element_text(size = 22),
+                    plot.title = element_text(hjust = 0.5)
+                ) +
+                xlab("Injuries") +
+                ylab("Count") +
+                ggtitle("Distriubtion of Injuries for NFL players")
+            
+        } else if(input$position == "Offense" | "Defense") {
+            str_to_lower(input$position) %>%
+                group_by(bodypart) %>%
+                summarise(counts = sum(counts)) %>%
+                ggplot(aes(x = reorder(bodypart, - counts), y = counts)) +
+                geom_col() +
+                theme(
+                    axis.title.x = element_text(size = 15),
+                    axis.title.y = element_text(size = 15),
+                    title = element_text(size = 22),
+                    plot.title = element_text(hjust = 0.5)
+                ) +
+                xlab("Injuries") +
+                ylab("Count") +
+                ggtitle("Distriubtion of Injuries for NFL players")
+            
+        }
     })
 }
 

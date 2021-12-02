@@ -124,10 +124,8 @@ age <- function(dob, age.day = today(), units = "years", floor = TRUE) {
 ```{r}
 injured = injured %>% 
   mutate(short_team_name = fix_nfl_names(full_team), injury = rep(1, nrow(injured))) %>%
-  filter(head == 1 | shoulder == 1 | upper_torso == 1 | 
-         lower_torso == 1 | arm == 1 | hand == 1 | 
-         leg == 1 | foot == 1) %>% 
-  select(name, short_team_name, full_team, team, year, injury)
+  mutate(total_injuries = select(injured, head, shoulder, upper_torso, lower_torso, arm, hand, leg, foot) %>% rowSums) %>% 
+  filter(total_injuries != 0)
 
 ```
 
@@ -140,7 +138,7 @@ players_dat = read.csv("all_player_demographic_clean.csv")
 players = players_dat %>% 
   mutate(short_team_name = fix_nfl_names(full_team), 
          age = age(ymd(birthdate)), bmi = (weight_pounds / height_inches^2)*703) %>% 
-  select(name, short_team_name, full_team, team, year, position_id, age, bmi, game_starter)
+  mutate(age = age - (2021 - year))
 
 'filter(year == 2018) %>% 
             mutate(injury = as.factor(ifelse(is.na(injury_types), 0, 1)), # make binary injury variable
@@ -232,8 +230,7 @@ injuries %>% ggplot(aes(year)) +
 ### Our first step is to check for missing data in our predictors and outcome
 ```{r}
 players = players %>% 
-  filter(year == 2018) %>% 
-  mutate(age = age - 3) # subtract 3 years for 2018 age
+  filter(year == 2018)
 
 apply(players %>% 
         select(injury, bmi, position_id, age), 2, 
@@ -283,7 +280,6 @@ players %>% ggplot(aes(injury, bmi)) +
 ### What is the distribution of `injury` by `age` in 2018?
 ```{r}
 injuries %>% filter(year == 2018) %>% 
-             mutate(age = age - 3) %>% # subtract 3 years for 2018 age
              ggplot(aes(age)) +
                geom_histogram(binwidth = 0.5) +
                xlab("Age") +

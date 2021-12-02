@@ -100,9 +100,7 @@ leg_counts <- broad(Leg, "leg")
 foot_counts <- broad(Foot, "foot")
 ```
 
-```{r}
-injuries
-```
+
 
 
 Adding body part columns to the orginal injury data frame
@@ -118,7 +116,7 @@ injuries <- injuries %>%
   mutate(foot = foot_counts)
   
 
-injuries
+head(injuries)
 ```
 
 
@@ -130,9 +128,10 @@ write.csv(injuries,"C:/Users/wduff/OneDrive/School/Harvard/Fall2021/BST260/BST_2
 
 
 
+
 Gathering into long format
 ```{r}
-injury_gather <- gather(injuries, key="bodypart", value="counts", 28:ncol(injuries))
+injury_gather <- gather(injuries, key = "bodypart", value = "counts", 28:ncol(injuries))
 injury_gather
 ```
 
@@ -156,6 +155,12 @@ Now for the next part at EDA, let's look at the injury distributions across the 
 ```{r}
 levels(as.factor(injuries$position_id))
 ```
+
+```{r}
+injuries %>% filter(position_id == "K")
+```
+
+
 
 We see we have the following positions: Kicker (K), Offensive Line (OL), Punter (P), Quarter Back (QB), Running Back (RB), Tight End (TE), Wide Reciever (WR) and Defense (DEF).
 
@@ -204,6 +209,26 @@ defense %>%
   ylab("Count") +
   ggtitle("Distriubtion of Defensive Injuries")
 ```
+
+
+
+Distribution of injuries for kickers
+```{r}
+offense %>% 
+  filter(position_id == "K") %>%
+  group_by(bodypart) %>%
+  summarise(counts = sum(counts)) %>%
+  ggplot(aes(x = reorder(bodypart, -counts), y = counts)) +
+  geom_col() +
+  xlab("Body Part") +
+  ylab("Count") +
+  ggtitle("Distriubtion of Offensive Injuries")
+```
+
+
+
+
+
 
 
 
@@ -329,5 +354,24 @@ Numeric scale of age --> Give distribution based on age
 Another drop down menu? --> just specific offensive positions
 Time varying counts? --> injury counts based on year
 
+
+
+
+```{r}
+eval(parse(text = str_to_lower("Offense"))) %>%
+                group_by(bodypart) %>%
+                summarise(counts = sum(counts)) %>%
+                ggplot(aes(x = reorder(bodypart, - counts), y = counts)) +
+                geom_col() +
+                theme(
+                    axis.title.x = element_text(size = 15),
+                    axis.title.y = element_text(size = 15),
+                    title = element_text(size = 22),
+                    plot.title = element_text(hjust = 0.5)
+                ) +
+                xlab("Injuries") +
+                ylab("Count") +
+                ggtitle("Distriubtion of Injuries for NFL players")
+```
 
 

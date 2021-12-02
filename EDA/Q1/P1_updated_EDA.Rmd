@@ -34,13 +34,31 @@ library(splitstackshape)
 library(tidyverse)
 library(VGAM)
 library(vcd)
+library(MASS)
 options(digits = 3)
 theme_update(plot.title = element_text(hjust = 0.5))
 ```
 
 ```{r}
-injuries = read.csv("all_injuries_clean.csv") # load data
+# load data
+injured = read.csv("../../Data/all_injuries_clean.csv") 
+demographics = read.csv("../../Data/all_player_demographic_clean.csv")
+
+# add column for total number of injuries for each player each year
+injured <- injured %>%
+  mutate(all_injuries = select(injured, c("head", "shoulder", "upper_torso", "lower_torso", 
+                                           "arm", "hand", "leg", "foot")) %>% 
+           rowSums)
+
+# join with demographic data
+injuries = full_join(injured, demographics, by = c("name", "full_team", "team", "year"))
+
+# replace NA injuries with zero? double-check that I should do this
+injuries$all_injuries[is.na(injuries$all_injuries)] <- 0
 ```
+
+**clarifying question--does the injuries dataset only include people who were injured? need to make sure that we are sure about who was not injured**
+
 
 ```{r, include=F}
 fix_nfl_names <- function(x){ #https://rdrr.io/github/papagorgio23/bettoR/src/R/fix_nfl_names.R
@@ -122,15 +140,13 @@ age <- function(dob, age.day = today(), units = "years", floor = TRUE) {
 ```{r, include=F}
 injuries = injuries %>% mutate(short_team_name = fix_nfl_names(full_team),
                                age = age(ymd(birthdate))) %>% 
-                        select(name, full_team, age,
-                               year, games_in_season, 
-                               num_games_missing, num_games_injured, injury_types,
-                               earliest_injury, latest_injury, position_id, 
-                               height_inches, weight_pounds, birthdate,
-                               short_team_name) %>% 
+                        #select(name, full_team, age,
+                               #year, games_in_season, 
+                               #num_games_missing, num_games_injured, injury_types,
+                               #earliest_injury, latest_injury, position_id, 
+                               #height_inches, weight_pounds, birthdate,
+                               #short_team_name) %>% 
                         filter(position_id != "")
-
-
 ```
 
 
@@ -146,8 +162,23 @@ table(injuries$position_id)
 ### Q1: Which positions are most at-risk for injuries? The table below contains descriptive statistics calculated for each position over multiple seasons (2009 - Present). 
 
 ```{r}
-number_injury = injuries %>% group_by(position_id, year) %>% 
-                             count()
+# number_injury = injuries %>% group_by(position_id, year) %>% 
+#                              count()
+# 
+# number_injury %>% filter(position_id != "WR") %>% 
+#   group_by(position_id) %>% 
+#   summarise(mean = mean(n), 
+#             sd = sd(n), 
+#             Q1 = quantile(n, probs = 0.25),
+#             median = median(n),
+#             Q3 = quantile(n, probs = 0.75)) %>% 
+#   pander
+
+
+# count injuries per position per year
+number_injury <- injuries %>%
+  group_by(year, position_id) %>%
+  summarize(n = sum(all_injuries, na.rm = TRUE))
 
 number_injury %>% filter(position_id != "WR") %>% 
   group_by(position_id) %>% 
@@ -155,9 +186,13 @@ number_injury %>% filter(position_id != "WR") %>%
             sd = sd(n), 
             Q1 = quantile(n, probs = 0.25),
             median = median(n),
-            Q3 = quantile(n, probs = 0.75)) %>% 
-  pander
+            Q3 = quantile(n, probs = 0.75)) %>%
+  pander()
+
+# try the same thing but count multiple injuries multiple times
 ```                                                   
+
+**why take out WR?**
 
 
 ```{r}             
@@ -165,19 +200,35 @@ number_injury %>% ggplot(aes(year, n, color = position_id)) +
                     geom_line() +
                     xlab("Year") +
                     ylab("# of Injuries") +
+                    scale_y_log10() +
                     scale_color_discrete(name = "Position") +
                     ggtitle("Number of Injuries by Position (2009 - Present)")
 ```
+
+**need to adjust each position somehow**
+
+```{r}
+# adjust for numbers of players in that position we have in the data?
+
+# adjust for typical number of people in that position on the field at one time?
+
+
+```
+
+
 
 &nbsp;
 
 ### What about injuries per year? Is this uniformly distributed?
 ```{r}
-injuries %>% ggplot(aes(year)) + 
+injuries %>% filter(year != 2021) %>%
+              ggplot(aes(year)) + 
               geom_bar() + 
               ylab("# of Injuries") +
-              ggtitle("# of Injuries per Year")
+              ggtitle("# of Players Injured per Season")
 ```
+
+**confused by this plot**
 
 &nbsp;
 
@@ -191,18 +242,18 @@ injuries %>% ggplot(aes(year)) +
 &nbsp;
 
 ```{r}
-players_dat = read.csv("all_player_demographic_clean.csv")
+#players_dat = read.csv("all_player_demographic_clean.csv")
 
-players = players_dat %>% 
+players = injuries %>% 
             filter(year == 2018) %>% 
-            mutate(injury = as.factor(ifelse(is.na(injury_types), 0, 1)), # make binary injury variable
+            mutate(injury = as.factor(ifelse(all_injuries == 0, 0, 1)), # make binary injury variable
                    position_id = as.factor(position_id), # make position categorical
                    bmi = weight_pounds / height_inches^2, # make BMI variable
                    age = age(ymd(birthdate)) - 3) %>% # subtract 3 years to match age in 2018
             filter(position_id != "")
-
-
 ```
+
+**tried removing NAs--need to check how many there were**
 
 &nbsp;
 
@@ -336,6 +387,46 @@ players %>% filter(injury == 1) %>% select(position_id) %>% table() %>% pander(c
 players %>% filter(injury == 0) %>% select(position_id) %>% table() %>% pander(caption = "non-Injured")
 ```
 
+## Try stepwise selection
+
+### First remove missing values
+**need to check how many missing vals--add to Addison's table**
+
+```{r}
+players_cc <- players %>%
+  drop_na(age, game_starter, NFL_draft_round, NFL_draft_year, position_id, weight_pounds, height_inches, bmi)
+```
+
+**if missing NFL draft round, replace with some higher number? if they are worse players**
+
+```{r}
+# model with all potential covariates
+# logi_fit_all <- glm(data = players, injury ~ as.factor(position_id) + age + NFL_draft_round + 
+#                       as.factor(game_starter) + weight_pounds + height_inches + bmi + NFL_draft_year, 
+#                     family = binomial())
+logi_fit_all <- glm(data = players_cc, injury ~ 1, 
+                    family = binomial())
+summary(logi_fit_all)
+
+logi_step_fit_for <- logi_fit_all %>% 
+  step(direction = "forward", data = players_cc, trace = TRUE, 
+       scope = (~ as.factor(position_id) + age + NFL_draft_round + as.factor(game_starter) + weight_pounds +
+                  height_inches + bmi + NFL_draft_year))
+summary(logi_step_fit_for)
+
+
+# scope = (~ as.factor(position_id) + age + NFL_draft_round + as.factor(game_starter) + weight_pounds +
+#                   height_inches + bmi + NFL_draft_year)
+
+logi_step_fit_back <- logi_fit_all %>% 
+  step(direction = "backward", data = players_cc, trace = TRUE, 
+       scope = (~ as.factor(position_id) + age + NFL_draft_round + as.factor(game_starter) + weight_pounds +
+                  height_inches + bmi + NFL_draft_year))
+summary(logi_step_fit_back)
+```
+
+**some predictors have missing values**
+
 &nbsp;
 
 # Machine Learning and Prediction
@@ -373,6 +464,8 @@ confusionMatrix(data = y_hat_logit,
                 reference = test_set[["injury"]], positive = "1") # generate confusion matrix
 
 ```
+
+
 
 
 &nbsp;

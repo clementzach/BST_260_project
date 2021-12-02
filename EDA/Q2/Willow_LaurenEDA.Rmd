@@ -324,9 +324,9 @@ injury_age[122772, ]
 
 
 Shiny App:
-Drop down menu --> all players, offensive players, defensive players
+Drop down menu --> all players, offensive players, defensive players, ???team???
 Numeric scale of age --> Give distribution based on age
-Another dropdown menu? --> just specific offensive positions
+Another drop down menu? --> just specific offensive positions
 Time varying counts? --> injury counts based on year
 
 

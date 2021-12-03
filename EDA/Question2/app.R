@@ -18,7 +18,7 @@ library(ggthemes)
 
 
 library(readr)
-all_injuries_clean <- read_csv("Data/all_injuries_clean.csv")
+injuries <- read_csv("all_injuries_clean.csv")
 
 injury_gather <- gather(injuries, key = "bodypart", value = "counts", 28:ncol(injuries))
 injury_gather

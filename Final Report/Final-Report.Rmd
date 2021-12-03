@@ -1,5 +1,5 @@
 ---
-title: "Final Report"
+title: "BST 222Final Report"
 author: "Dan Nolte"
 date: "11/23/2021"
 output: html_document
@@ -9,40 +9,67 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+### Overview and Motivation
 
-# Must inlcude these components
+We are a team of athletes and sports lovers, so we were interested in using data to research a problem in the world of professional sports. We decided to examine NFL injuries since particular injuries are common in football at the professional level, and their incidence and severity play a large role in determining the players’ comeback to play and a team’s success. Injuries don’t occur at random; we’d like to deduce some patterns underlying injury incidence to better understand the risks involved for players and teams.
 
-### Overview and Motivation: Provide an overview of the project goals and the motivation for it. Consider that this will be read by people who did not see your project proposal.
+In particular, we would like to examine which positions are most at risk for injuries, which injuries are most common, which teams have the most injuries (and if these teams are consistently the same each year), and whether injury incidence has evolved over time (and in particular, if concussion rates have decreased following the introduction of new helment technology in 2017). 
 
-We are a team of athletes and sports lovers, so we were interested in using data to research a problem in the world of professional sports. We decided to examine NFL injuries since particular injuries are common in football at the professional level, and their incidence and severity play a large role in determining the players’ comeback to play and a team’s success. Injuries don’t occur at random; we’d like to deduce some patterns underlying injury incidence to better understand the risks involved for players and teams. 
+### Related Work
 
+What inspired us most was a conversation we all had about the severity and even controversial topic of helmet protection/concussions in the NFL. We wondered if head injuries were the most common injuries among NFL players and if concussion injuries decreased once new rules and technology were introduced in 2017. From there, we considered other related topics pertaining to NFL injuries. 
 
-### Related Work: Anything that inspired you, such as a paper, a web site, or something we discussed in class.
+We discovered that, unsurprisingly, we were not the first people to ask these questions. We came across a useful resource call [pro-football-reference.com](www.pro-football-reference.com) which compiled rosters and injuries for all NFL teams dating back to 2008, and included downloadable CSVs of this data for ease of analysis. We found that there is in fact a [Kaggle competition](https://www.kaggle.com/jaseziv83/an-analysis-of-nfl-injuries/report) which investigates the relationship between playing surface (synthetic turf vs. natural turf) and injury performance. We also discovered several independent analyses on this topic, including [one on the topic of concussions](https://www.edgewortheconomics.com/experience-06-23-2011-nfl-players-injury-analysis) from a consulting firm,[one on the relationship between weather conditions and injury incidence](https://www.datawithbliss.com/weather-data) conducted by a data scientist employed by the NFL, and [an academic research article](https://www.sciencedirect.com/science/article/pii/S2666061X21000808) examining the injury rate in the NFL in the 2020 NFL season, and claiming that it was higher than usual due to the lack of a pre-season because of COVID-19.    
 
-What inspired us most was a conversation we all had about the severity and even controversial topic of helmet protection/concussions in the NFL. We wondered if head injuries were the most common injuries among NFL players and if concussion injuries decreased once new rules and technology were introduced in 2017. From there, we explored more topics within the NFL injury realm including predicting injuries based on various explanatory variables and running several ???logistical??? models. 
-
-
+These reports gave us confidence that was a precedence for studying these topics, and helped provide us a road map for asking plausible questions and sourcing data which would allow us to answer our research questions.  
 
 
 ### Initial Questions: What questions are you trying to answer? How did these questions evolve over the course of the project? What new questions did you consider in the course of your analysis?
 
+We were initially interested in examining 7 questions, stated below: 
 
+1) Which positions are most at-risk for injuries?
+2) Which injuries are most common in the NFL?
+3) Which teams have the most injuries, and are these teams consistently the same ones year over year?
+4) How has injury incidence evolved over time in the NFL? 
+5) Can we identify an association between weather conditions and injury risk?
+6) What’s the distribution of injury duration? How many games must a player typically miss after being injured, and how does this vary by injury type?
+7) What is the relationship between body type (e.g., height, weight, and BMI) and injury risk? What about age?  
 
+We ultimately decided to only consider questions 1-4, for a few reasons. 
 
+For question 5, we ran into a time constraint: because we built our own data for this project by web scraping pro-football-reference.com instead of using a pre-built dataset, finding and building the additional data that would be needed to answer our question about weather conditions would have cost time that was better spent answering questions 1-4 to the best of our abilities.  
+
+We decided against studying questions 6 because as we began to work more closely with our dataset, we realized that the structure of our injury data source did not lend itself to answering our question about injury duration. It was not possible to reliably discern the length of time each athlete was injured due to one particular injury because, for example, it was common for athlete to have multiple injuries at once. Not to mention: we realized there was no way to know the duration of injuries that were incurred at the end of the season and which healed in the off-season.  
+
+As for question 7, we realized that this question could be subsumed by other questions under consideration. For example, in our analysis of question 1 we ran a logistic regression predicting binary injury occurrence using the covariates under study in question 7.   
 
 ### Data: Source, scraping method, cleanup, etc.
 
-Source & Scraping method --> Zach
+**1) Data source**
+Our data source was [pro-football-reference.com](pro-football-reference.com). 
+
+**2) Web scraping method**
+
+**3) Data cleaning**
+
+**a) Data shaping**
+
+**b) Injury classification**
 
 Once the data was scraped, there were issues with the free text in the injury column. In order to work with this data set to answer some of our primary questions, we needed to clean the data in such a way that the injuries could be easily modeled and analyzed. With so many injuries initially reported, as seen in the exploratory analysis below, we grouped the injuries into 8 main categories based on a part of the body. These included: Head, Shoulder, Upper Torso, Lower Torso, Arm, Hand, Leg and Foot. This way, the distribution of injuries was much easier to evaluate and draw conclusions from all while still keeping the injury data significant to each player. Once this decision was made, we went about the cleanup of the free text by first removing any special characters separating injuries from each other (mostly "\") and replacing them with a space. Many injuries were read like : "knee arm concussion head" as one large string. To deal with this issue we created a code and function that allowed each specific injury to be re-coded in its appropriate category. For example the above string would be recoded as "leg arm head head". Therefore we classified this player as having 1 leg injury, 1 arm injury and 2 head injuries. Once the injuries were re-coded, we used the mutate() function and created count columns for each of 8 body part injuries summing up how many of those injuries each player had. Once this was complete, we used the group_by() function and the summarise() function to obtain the the total counts of each body part injury. This way, we were able to move forward with answering some of our primary questions with a data set that was usable. 
 
-
 ### Exploratory Analysis: What visualizations did you use to look at your data in different ways? What are the different statistical methods you considered? Justify the decisions you made, and show any major changes to your ideas. How did you reach these conclusions?
 
-Have to put in some code here, maybe we can meet one day and fill this out together so it doesn't get too confusing?
+We conducted exploratory data analysis on each of our 4 questions of interest separately. Below we will describe initial analysis and results for each question. 
+
+**Question 1: Which positions are most at-risk for injuries?**
+
+**Question 2: Which injuries are most common in the NFL?**
+**Question 3: Which teams have the most injuries, and are these teams consistently the same ones year over year?**
+**Question 4: How has injury incidence evolved over time in the NFL?**
 
 Willow Include: Initial EDA with no cleanup, new EDA with cleanup (for all players), EDA based on Offense or Defense, EDA based on age, EDA based on year
-
 
 
 ### Final Analysis: What did you learn about the data? How did you answer the questions? How can you justify your answers? Note that 1 type of analysis per team member is required. A Shiny app counts as a type of analysis.

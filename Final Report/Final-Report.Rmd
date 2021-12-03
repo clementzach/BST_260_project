@@ -71,7 +71,6 @@ We conducted exploratory data analysis on each of our 4 questions of interest se
 
 Willow Include: Initial EDA with no cleanup, new EDA with cleanup (for all players), EDA based on Offense or Defense, EDA based on age, EDA based on year
 
-
 ### Final Analysis: What did you learn about the data? How did you answer the questions? How can you justify your answers? Note that 1 type of analysis per team member is required. A Shiny app counts as a type of analysis.
 
 

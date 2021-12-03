@@ -1,0 +1,175 @@
+---
+title: "Question 3 - Dan"
+author: "Dan Nolte"
+date: "11/13/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+library(ggthemes)
+library(lubridate)
+library(eeptools)
+library(vcd)
+library(MASS)
+require(pscl)
+require(boot)
+```
+
+```{r}
+# Load data
+injuries = read.csv("Data/all_injuries_clean.csv")
+players = read.csv("Data/all_player_demographic_clean.csv")
+
+# Merge data
+injuries_expanded = left_join(injuries, players, by = c("name", "team", "year", "full_team"))
+
+# Step 1: Generate Injuries by Team-Year Summary Data
+injuries_by_team_year = injuries_expanded %>% 
+  filter(year < 2021) %>% 
+  mutate(injury_count = rowSums(dplyr::select(.,head:foot))) %>% 
+  group_by(year, full_team) %>% 
+  summarize(all_injuries = sum(injury_count)) %>% 
+  group_by(full_team) %>% 
+  mutate(cumsum_all_injuries = cumsum(all_injuries))
+
+# Step 2: Generate Injuries by Team Summary Data
+injuries_by_team = injuries_by_team_year %>% 
+  group_by(full_team) %>% 
+  summarize(
+    total_injuries = sum(all_injuries),
+    median_injuries = median(all_injuries),
+    max_injuries = max(all_injuries),
+  )
+
+# Step 3: Join data from Step 1 and Step 2 
+injuries_by_team_year_with_summary = left_join(injuries_by_team_year, injuries_by_team, by = "full_team")
+
+# Plot 1
+p1 = ggplot(data = injuries_by_team, aes(x = total_injuries, y = reorder(full_team, total_injuries))) +
+  geom_col() + 
+  theme_economist() + 
+  xlab("Total Injuries") +
+  ylab(element_blank()) +
+  ggtitle("Total Injuries by Team, 2009-2020")
+p1
+
+# Plot 2
+p2 = ggplot(data = injuries_by_team, aes(x = max_injuries, y = reorder(full_team, max_injuries))) +
+  geom_col() + 
+  theme_economist() + 
+  xlab("Total Injuries") +
+  ylab(element_blank()) +
+  ggtitle("Max Injuries in a Single Season, 2009-2020")
+p2
+
+# Plot 3
+p3 = ggplot(data = injuries_by_team_year_with_summary, aes(x = all_injuries, y = reorder(full_team, median_injuries))) +
+  geom_boxplot() + 
+  theme_economist() + 
+  xlab("Injuries Per Year") +
+  ylab(element_blank()) +
+  ggtitle("Injuries Per Year (2009-2020), by Team")
+p3
+
+# Plot 4
+p4 = ggplot(data = injuries_by_team_year_with_summary, aes(x = year, y = full_team)) +
+  geom_tile(aes(fill = all_injuries), color = "white") + 
+  scale_fill_distiller(palette = "YlGnBu", direction = 1) +
+  xlab("Year") +
+  ylab(element_blank()) +
+  ggtitle("Injuries by Team") +
+  theme_economist() +
+  theme(legend.position = "right") + 
+  labs(fill = "Injuries")
+p4
+
+#### Poisson Regression Analysis ####
+
+### Generate Count Data for Poisson Regression ###
+
+# Join data and generate injury counts
+count_data = 
+  right_join(injuries, players, by = c("name", "team", "year", "full_team")) %>%
+  mutate(injury_count = rowSums(dplyr::select(.,head:foot))) %>%
+  mutate(injury_count = ifelse(is.na(injury_count), 0, injury_count)) %>%
+ 
+  # Calculate games_played for each player-team-year
+  mutate(
+    games_played = 
+      ifelse(
+        is.na(games_in_season), 16, games_in_season - num_games_missing
+      )
+  ) %>% 
+  
+  # Calculate age for each player-team-year
+  mutate(
+    age = round(time_length(difftime(
+      as.Date(ISOdate(year, 11, 1)), as.Date(birthdate)), "years"
+      )
+    )
+  ) %>% 
+  
+  # Calculate age category
+  mutate(
+    age_cat = case_when(
+        age <= 23 ~ "0-23",
+        age >= 24 & age <= 28 ~ "24-28",
+        age >= 29 & age <= 33 ~ "29-33",
+        age > 33 ~ "> 33"
+      ),
+    age_cat = factor(
+      age_cat,
+      level = c("0-23", "24-28","29-33", "> 33")
+    )) %>%
+  
+  # Group by covariates of interest and generate count data and player-game offset
+  group_by(full_team, year, position_id, age_cat) %>% 
+  summarize(
+    total_injuries = sum(injury_count),
+    player_games = sum(games_played)
+  )
+
+### Diagnostics ###
+
+# Generate histogram of counts
+p5 = ggplot(data = count_data, aes(x = total_injuries)) +
+  geom_histogram(binwidth = 2) +
+  theme_economist() +
+  xlab("Total Injuries") + 
+  ggtitle("Historgram of Total Injuries")
+p5
+
+# Check mean = variance assumption
+mean(count_data$total_injuries)
+var(count_data$total_injuries)
+
+# Note: the variance is much greater than the mean. We will need to address this in modeling. 
+
+# Run model
+model1 = glm(total_injuries ~ year + full_team + position_id + age_cat, offset = log(player_games), data = count_data, family = poisson())
+summary(model1)
+
+# Check for overdispersion
+deviance(model1)/model1$df.residual
+distplot(count_data$total_injuries, type="poisson")
+distplot(count_data$total_injuries, type="nbinom")
+
+# This division gives 1.53, which is higher than 1, so we will run some additional models
+
+# Quasipoisson
+model2 = glm(total_injuries ~ year + full_team + position_id + age_cat, offset = log(player_games), data = count_data, family = quasipoisson())
+summary(model2)
+
+# Negative Binomial
+model3 = MASS::glm.nb(total_injuries ~ year + full_team + position_id + age_cat, data = count_data)
+summary(model3)
+
+# Zero-Inflated Poisson
+model4 = pscl::hurdle(total_injuries ~ year + full_team + position_id + age_cat, offset = log(player_games), data = count_data, dist = "poisson")
+summary(model4)
+```

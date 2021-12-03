@@ -5,8 +5,6 @@ output:
     df_print: paged
 ---
 
-
-
 ```{r}
 library(dplyr)
 library(ggplot2)
@@ -19,7 +17,7 @@ library(ggthemes)
 
 Read in the data set
 ```{r}
-injuries <- read.csv("C:/Users/wduff/OneDrive/School/Harvard/Fall2021/BST260/BST_260_project/Data/injuries_only.csv")
+injuries <- read.csv("all_injuries_clean.csv")
 ```
 
 ```{r}
@@ -28,6 +26,7 @@ dim(injuries)
 ```
 
 ```{r}
+# Change the injuries to be all lower case
 injuries <- injuries %>% mutate(injury_types = tolower(injury_types))
 ```
 
@@ -37,7 +36,7 @@ injuries$injury_types <- gsub("/", " ", injuries$injury_types)
 ```
 
 
-Body part vectors
+Create the body part vectors
 ```{r}
 Head <- c("concussion", "head", "neck", "eye", "ear", "chin", "migranes", "migrane", "jaw", "nose", "tooth", "stinger", "faciallaceration", "eyelid", "facial", "mouth", "nose", "throat", "seizure")
 
@@ -55,8 +54,6 @@ Hand <- c("hand", "righthand", "thumb", "rightthumb", "finger", "rightfinger", "
 Leg <- c("hamstring", "righthamstring", "knee", "rightknee", "acl", "mcl", "meniscus", "bothknees", "thigh", "rightthigh", "calf", "rightcalf", "quadricep", "rightquadricep", "quad", "groin", "rightgroin", "lowerleg", "tibia", "fibula", "shin", "rightshin", "adductor", "contusion")
 
 Foot <- c("foot", "rightfoot", "ankle", "achilles", "toe", "toes", "heel")
-
-
 ```
 
 
@@ -102,8 +99,6 @@ foot_counts <- broad(Foot, "foot")
 ```
 
 
-
-
 Adding body part columns to the orginal injury data frame
 ```{r}
 injuries <- injuries %>% 
@@ -127,16 +122,13 @@ write.csv(injuries,"C:/Users/wduff/OneDrive/School/Harvard/Fall2021/BST260/BST_2
 ```
 
 
-
-
-
 Gathering into long format
 ```{r}
 injury_gather <- gather(injuries, key = "bodypart", value = "counts", 28:ncol(injuries))
 injury_gather
 ```
 
-
+## EDA
 
 Overall distribution of body part injuries
 ```{r}
@@ -144,10 +136,17 @@ injury_gather %>%
   group_by(bodypart) %>%
   summarise(counts = sum(counts)) %>%
   ggplot(aes(x = reorder(bodypart, -counts), y = counts)) +
-  geom_col() +
+  geom_col() + 
+  geom_text(aes(label = counts), position= position_dodge(width = 0.9), vjust = -0.25, fontface = 'bold') +
   xlab("Body Part") +
   ylab("Count") +
-  ggtitle("Distriubtion of Injuries by Body Part")
+  ggtitle("Distriubtion of Injuries by Body Part") +
+  theme_economist() +
+  theme(axis.title.x = element_text(size = 16, vjust = -3),
+        axis.title.y = element_text(size = 16, vjust = 3),
+        title = element_text(size = 20),
+        plot.title = element_text(hjust = 0.5)
+                )
 ```
 
 
@@ -170,7 +169,9 @@ Since Defense has it's own category with no specific position (like Linebacker, 
 ```{r}
 offensive_position <- c("K", "OL", "P", "QB", "RB", "TE", "WR")
 
+# Only offensive players
 offense <- injury_gather %>% filter(position_id %in% offensive_position)
+# Only defensive players
 defense <- injury_gather %>% filter(position_id == "DEF") 
 
 levels(as.factor(offense$position_id))
@@ -183,8 +184,6 @@ dim(defense)
 We have 7712 offensive players and 72309 defensive players which is great since the data sets are somewhat balanced and therefore comparing them will be valid. 
 
 
-
-
 Overall distribution of offensive injuries
 ```{r}
 offense %>% 
@@ -192,9 +191,16 @@ offense %>%
   summarise(counts = sum(counts)) %>%
   ggplot(aes(x = reorder(bodypart, -counts), y = counts)) +
   geom_col() +
+  geom_text(aes(label = counts), position= position_dodge(width = 0.9), vjust = -0.25, fontface = 'bold') +
   xlab("Body Part") +
   ylab("Count") +
-  ggtitle("Distriubtion of Offensive Injuries")
+  ggtitle("Distriubtion of Offensive Injuries") +
+  theme_economist() +
+  theme(axis.title.x = element_text(size = 16, vjust = -3),
+        axis.title.y = element_text(size = 16, vjust = 3),
+        title = element_text(size = 20),
+        plot.title = element_text(hjust = 0.5)
+                )
 ```
 
 
@@ -206,9 +212,16 @@ defense %>%
   summarise(counts = sum(counts)) %>%
   ggplot(aes(x = reorder(bodypart, -counts), y = counts)) +
   geom_col() +
+  geom_text(aes(label = counts), position= position_dodge(width = 0.9), vjust = -0.25, fontface = 'bold') +
   xlab("Body Part") +
   ylab("Count") +
-  ggtitle("Distriubtion of Defensive Injuries")
+  ggtitle("Distriubtion of Defensive Injuries") +
+  theme_economist() +
+  theme(axis.title.x = element_text(size = 16, vjust = -3),
+        axis.title.y = element_text(size = 16, vjust = 3),
+        title = element_text(size = 20),
+        plot.title = element_text(hjust = 0.5)
+                )
 ```
 
 
@@ -238,158 +251,4 @@ offense %>%
 
 
 
-
-
-
-
-```{r}
-injury_gather %>% 
-  group_by(team) %>%
-  summarise(counts = sum(counts)) %>%
-  ggplot(aes(x = reorder(team, -counts), y = counts)) +
-  geom_col() +
-  xlab("NFL Team") +
-  ylab("Count") +
-  ggtitle("Distriubtion of Injuries by Team")
-```
-
-```{r}
-injury_gather %>% 
-  group_by(year) %>%
-  summarise(counts = sum(counts)) %>%
-  ggplot(aes(x = year, y = counts)) +
-  geom_col() +
-  xlab("Year") +
-  ylab("Count") +
-  ggtitle("Distriubtion of Injuries by Year")
-```
-
-
-```{r}
-injury_gather %>% 
-  group_by(height_inches) %>%
-  summarise(counts = sum(counts)) %>%
-  ggplot(aes(x = height_inches, y = counts)) +
-  geom_col() +
-  xlab("Height (in)") +
-  ylab("Count") +
-  ggtitle("Distriubtion of Injuries by Height")
-
-injury_gather %>% 
-  group_by(weight_pounds) %>%
-  summarise(counts = sum(counts)) %>%
-  ggplot(aes(x = weight_pounds, y = counts)) +
-  geom_col() +
-  xlab("Weight (lbs)") +
-  ylab("Count") +
-  ggtitle("Distriubtion of Injuries by Weight")
-```
-
-
-```{r}
-injury_age <- injury_gather %>% mutate(age = floor(as.numeric(difftime(Sys.Date(),injury_gather$birthdate, units = "weeks"))/52.25))
-
-injury_age
-```
-
-
-
-```{r}
-injury_age %>% 
-  group_by(age) %>%
-  summarise(counts = sum(counts)) %>%
-  ggplot(aes(x = age, y = counts)) +
-  geom_col() +
-  xlab("Age") +
-  ylab("Count") +
-  ggtitle("Distriubtion of Injuries by Age")
-```
-
-
-```{r}
-injury_age %>% 
-  group_by(bodypart) %>%
-  filter(age == 37) %>%
-  summarise(counts = sum(counts)) %>%
-  ggplot(aes(x = reorder(bodypart, - counts), y = counts)) +
-  geom_col() +
-  theme(
-    axis.title.x = element_text(size = 14),
-    axis.title.y = element_text(size = 14),
-    title = element_text(size = 18)
-    ) +
-  xlab("Age = 37 Years") +
-  ylab("Count") +
-  ggtitle("Distriubtion of Injuries 37 Year Old NFL players")
-```
-
-
-```{r}
-new <- injury_age %>% select(age)
-range(new %>% drop_na())
-
-which(new$age == 75)
-new[1238,]
-
-which(injury_age$age == 75)
-
-
-
-#This guy is actually born in 1979 - same name as a guy born in 1945
-injury_age[1238,]
-
-#same guy
-injury_age[18600, ]
-
-injury_age[35962, ]
-
-injury_age[53324, ]
-injury_age[70686, ]
-
-injury_age[88048, ]
-injury_age[105410, ]
-injury_age[122772, ]
-
-#For every time D.D. Lewis 'name' observation, we need to change the 'birthdate' to 1979-01-08
-
-#temp <- injury_age %>% ifelse(name == "D.D. Lewis", birthdate == "1979-01-08", )
-
-```
-
-
-Shiny App:
-Drop down menu --> all players, offensive players, defensive players, ???team???
-Numeric scale of age --> Give distribution based on age
-Another drop down menu? --> just specific offensive positions
-Time varying counts? --> injury counts based on year
-
-
-
-
-```{r}
-eval(parse(text = str_to_lower("Offense"))) %>%
-                group_by(bodypart) %>%
-                summarise(counts = sum(counts)) %>%
-                ggplot(aes(x = reorder(bodypart, - counts), y = counts)) +
-                geom_col() +
-            
-                xlab("Injuries") +
-                ylab("Count") +
-                ggtitle("Distriubtion of Injuries for NFL players")
-```
-
-
-```{r}
-x <- "Offensive"
-temp <- str_sub("Offensive", 1, nchar(x) - 3)
-e <- "e"
-
-y <- paste(temp, e, sep="")
-y
-
-```
-
-```{r}
-nchar(x)
-```
 

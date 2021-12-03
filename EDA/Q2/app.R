@@ -8,7 +8,18 @@
 #
 
 library(shiny)
+library(dplyr)
+library(ggplot2)
+library(stringr)
+library(tidytext)
+library(gsubfn)
+library(tidyr)
+library(ggthemes)
 
+
+#injuries <- read.csv("cleaneddata.csv")
+#injury_gather <- gather(injuries, key = "bodypart", value = "counts", 28:ncol(injuries))
+#injury_gather
 
 offensive_position <- c("K", "OL", "P", "QB", "RB", "TE", "WR")
 
@@ -43,7 +54,7 @@ ui <- fluidPage(
             sidebarPanel(
                 
                 # Explanatory text
-                column(6, p("First, we can look at the distribution pf injuries based on broad position")
+                column(6, p("First, we can look at the distribution of injuries based on broad position")
                 ),
                 
                 #Radio buttons that allow the user to select one
@@ -109,7 +120,7 @@ server <- function(input, output) {
                 scale_y_continuous(limits = c(0, 10000)) +
                 xlab("Body Part") +
                 ylab("Count") +
-                ggtitle("Distribution of Injuries for All NFL players") +
+                ggtitle("Distribution of Injuries for All Injured NFL players") +
                 theme_economist() +
                 theme(
                     axis.title.x = element_text(size = 16, vjust = -3),
@@ -132,7 +143,7 @@ server <- function(input, output) {
                 scale_y_continuous(limits = c(0, 10000)) +
                 xlab("Body Part") +
                 ylab("Count") +
-                ggtitle(paste("Distribution of Injuries for ", input$position, " NFL players")) + 
+                ggtitle(paste("Distribution of Injuries for Injured ", input$position, " NFL players")) + 
                 theme_economist() +
                 theme(
                     axis.title.x = element_text(size = 14, vjust = -3),

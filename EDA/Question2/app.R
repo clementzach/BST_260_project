@@ -17,9 +17,11 @@ library(tidyr)
 library(ggthemes)
 
 
-#injuries <- read.csv("cleaneddata.csv")
-#injury_gather <- gather(injuries, key = "bodypart", value = "counts", 28:ncol(injuries))
-#injury_gather
+library(readr)
+all_injuries_clean <- read_csv("Data/all_injuries_clean.csv")
+
+injury_gather <- gather(injuries, key = "bodypart", value = "counts", 28:ncol(injuries))
+injury_gather
 
 offensive_position <- c("K", "OL", "P", "QB", "RB", "TE", "WR")
 

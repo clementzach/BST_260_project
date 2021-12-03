@@ -14,6 +14,7 @@ library(stringr)
 library(tidytext)
 library(gsubfn)
 library(tidyr)
+library(ggthemes)
 ```
 
 Read in the data set
@@ -219,10 +220,18 @@ offense %>%
   group_by(bodypart) %>%
   summarise(counts = sum(counts)) %>%
   ggplot(aes(x = reorder(bodypart, -counts), y = counts)) +
+  geom_text(aes(label = counts), position=position_dodge(width = 0.9), vjust = -0.25, fontface='bold') +
   geom_col() +
   xlab("Body Part") +
   ylab("Count") +
-  ggtitle("Distriubtion of Offensive Injuries")
+  ggtitle("Distribution of Offensive Injuries") +
+  theme_economist() +
+  theme(
+    axis.title.x = element_text(size = 14, vjust = -3),
+    axis.title.y = element_text(size = 14, vjust = 3),
+    title = element_text(size = 18),
+    plot.title = element_text(hjust = 0.5)
+  )
 ```
 
 
@@ -363,15 +372,24 @@ eval(parse(text = str_to_lower("Offense"))) %>%
                 summarise(counts = sum(counts)) %>%
                 ggplot(aes(x = reorder(bodypart, - counts), y = counts)) +
                 geom_col() +
-                theme(
-                    axis.title.x = element_text(size = 15),
-                    axis.title.y = element_text(size = 15),
-                    title = element_text(size = 22),
-                    plot.title = element_text(hjust = 0.5)
-                ) +
+            
                 xlab("Injuries") +
                 ylab("Count") +
                 ggtitle("Distriubtion of Injuries for NFL players")
 ```
 
+
+```{r}
+x <- "Offensive"
+temp <- str_sub("Offensive", 1, nchar(x) - 3)
+e <- "e"
+
+y <- paste(temp, e, sep="")
+y
+
+```
+
+```{r}
+nchar(x)
+```
 

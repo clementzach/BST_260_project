@@ -43,12 +43,12 @@ ui <- fluidPage(
             sidebarPanel(
                 
                 # Explanatory text
-                column(6, p("Let's look at the distribution based on broad position")
+                column(6, p("First, we can look at the distribution pf injuries based on broad position")
                 ),
                 
                 #Radio buttons that allow the user to select one
                 column(6, radioButtons("position", label = "Select Category of Players:",
-                             choices = c("All Players", "Offense", "Defense"))
+                             choices = c("All Players", "Offensive", "Defensive"))
                 )
             ),
             
@@ -72,7 +72,7 @@ ui <- fluidPage(
             sidebarPanel(
                 
                 # Explanatory text
-                column(6, p("Now let's look just at the specific Offensive Positions")
+                column(6, p("Now, let's look just at the distribution of injuries for the specific offensive positions")
                 ),
                 
                 
@@ -105,33 +105,41 @@ server <- function(input, output) {
                 summarise(counts = sum(counts)) %>%
                 ggplot(aes(x = reorder(bodypart, - counts), y = counts)) +
                 geom_col() +
+                geom_text(aes(label = counts), position= position_dodge(width = 0.9), vjust = -0.25, fontface = 'bold') +
                 scale_y_continuous(limits = c(0, 10000)) +
-                theme(
-                    axis.title.x = element_text(size = 15),
-                    axis.title.y = element_text(size = 15),
-                    title = element_text(size = 22),
-                    plot.title = element_text(hjust = 0.5)
-                ) +
-                xlab("Injuries") +
+                xlab("Body Part") +
                 ylab("Count") +
-                ggtitle("Distriubtion of Injuries for NFL players")
+                ggtitle("Distribution of Injuries for All NFL players") +
+                theme_economist() +
+                theme(
+                    axis.title.x = element_text(size = 16, vjust = -3),
+                    axis.title.y = element_text(size = 16, vjust = 3),
+                    title = element_text(size = 20),
+                    plot.title = element_text(hjust = 0.5)
+                )
             
-        } else if(input$position == "Offense" | input$position == "Defense") {
-            eval(parse(text = str_to_lower(input$position))) %>%
+        } else if(input$position == "Offensive" | input$position == "Defensive") {
+            lower <- str_to_lower(input$position)
+            temp <- str_sub(lower, 1, nchar(lower) - 3)
+            e <- "e"
+            new <- paste(temp, e, sep = "")
+            eval(parse(text = new)) %>%
                 group_by(bodypart) %>%
                 summarise(counts = sum(counts)) %>%
                 ggplot(aes(x = reorder(bodypart, - counts), y = counts)) +
                 geom_col() +
+                geom_text(aes(label = counts), position = position_dodge(width = 0.9), vjust = -0.25, fontface = 'bold') +
                 scale_y_continuous(limits = c(0, 10000)) +
-                theme(
-                    axis.title.x = element_text(size = 15),
-                    axis.title.y = element_text(size = 15),
-                    title = element_text(size = 22),
-                    plot.title = element_text(hjust = 0.5)
-                ) +
-                xlab("Injuries") +
+                xlab("Body Part") +
                 ylab("Count") +
-                ggtitle("Distriubtion of Injuries for NFL players")
+                ggtitle(paste("Distribution of Injuries for ", input$position, " NFL players")) + 
+                theme_economist() +
+                theme(
+                    axis.title.x = element_text(size = 14, vjust = -3),
+                    axis.title.y = element_text(size = 14, vjust = 3),
+                    title = element_text(size = 18),
+                    plot.title = element_text(hjust = 0.5)
+                )
             
         }
     })
@@ -145,16 +153,18 @@ server <- function(input, output) {
             summarise(counts = sum(counts)) %>%
             ggplot(aes(x = reorder(bodypart, -counts), y = counts)) +
             geom_col() +
+            geom_text(aes(label = counts), position=position_dodge(width = 0.9), vjust = -0.25, fontface='bold') +
             scale_y_continuous(limits = c(0, 1500)) +
-            theme(
-                axis.title.x = element_text(size = 15),
-                axis.title.y = element_text(size = 15),
-                title = element_text(size = 22),
-                plot.title = element_text(hjust = 0.5)
-            ) +
             xlab("Body Part") +
             ylab("Count") +
-            ggtitle("Distriubtion of Offensive Injuries")
+            ggtitle(paste("Distribution of  Offensive Injuries for NFL", input$off)) +
+            theme_economist() +
+            theme(
+                axis.title.x = element_text(size = 14, vjust = -3),
+                axis.title.y = element_text(size = 14, vjust = 3),
+                title = element_text(size = 18),
+                plot.title = element_text(hjust = 0.5)
+            )
         
         
     })

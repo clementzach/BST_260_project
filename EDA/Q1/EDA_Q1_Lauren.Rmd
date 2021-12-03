@@ -41,8 +41,8 @@ theme_update(plot.title = element_text(hjust = 0.5))
 
 ```{r}
 # load data
-injured = read.csv("../../Data/all_injuries_clean.csv") 
-demographics = read.csv("../../Data/all_player_demographic_clean.csv")
+injured = read.csv("Data/all_injuries_clean.csv") 
+demographics = read.csv("Data/all_player_demographic_clean.csv")
 
 # add column for total number of injuries for each player each year
 injured <- injured %>%

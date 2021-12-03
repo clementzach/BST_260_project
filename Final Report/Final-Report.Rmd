@@ -1,5 +1,5 @@
 ---
-title: "Final Report"
+title: "BST 222 Final Report"
 author: "Dan Nolte"
 date: "11/23/2021"
 output: html_document
@@ -9,44 +9,536 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+### I) Overview and Motivation
 
-# Must inlcude these components
+We are a team of athletes and sports lovers, so we were interested in using data to research a problem in the world of professional sports. We decided to examine NFL injuries since particular injuries are common in football at the professional level, and their incidence and severity play a large role in determining the players’ comeback to play and a team’s success. Injuries don’t occur at random; we’d like to deduce some patterns underlying injury incidence to better understand the risks involved for players and teams.
 
-### Overview and Motivation: Provide an overview of the project goals and the motivation for it. Consider that this will be read by people who did not see your project proposal.
+In particular, we would like to examine which positions are most at risk for injuries, which injuries are most common, which teams have the most injuries (and if these teams are consistently the same each year), and whether injury incidence has evolved over time (and in particular, if concussion rates have decreased following the introduction of new helment technology in 2017). 
 
-We are a team of athletes and sports lovers, so we were interested in using data to research a problem in the world of professional sports. We decided to examine NFL injuries since particular injuries are common in football at the professional level, and their incidence and severity play a large role in determining the players’ comeback to play and a team’s success. Injuries don’t occur at random; we’d like to deduce some patterns underlying injury incidence to better understand the risks involved for players and teams. 
+### II) Related Work
 
+What inspired us most was a conversation we all had about the severity and even controversial topic of helmet protection/concussions in the NFL. We wondered if head injuries were the most common injuries among NFL players and if concussion injuries decreased once new rules and technology were introduced in 2017. From there, we considered other related topics pertaining to NFL injuries. 
 
-### Related Work: Anything that inspired you, such as a paper, a web site, or something we discussed in class.
+We discovered that, unsurprisingly, we were not the first people to ask these questions. We came across a useful resource call [pro-football-reference.com](www.pro-football-reference.com) which compiled rosters and injuries for all NFL teams dating back to 2008, and included downloadable CSVs of this data for ease of analysis. We found that there is in fact a [Kaggle competition](https://www.kaggle.com/jaseziv83/an-analysis-of-nfl-injuries/report) which investigates the relationship between playing surface (synthetic turf vs. natural turf) and injury performance. We also discovered several independent analyses on this topic, including [one on the topic of concussions](https://www.edgewortheconomics.com/experience-06-23-2011-nfl-players-injury-analysis) from a consulting firm,[one on the relationship between weather conditions and injury incidence](https://www.datawithbliss.com/weather-data) conducted by a data scientist employed by the NFL, and [an academic research article](https://www.sciencedirect.com/science/article/pii/S2666061X21000808) examining the injury rate in the NFL in the 2020 NFL season, and claiming that it was higher than usual due to the lack of a pre-season because of COVID-19.    
 
-What inspired us most was a conversation we all had about the severity and even controversial topic of helmet protection/concussions in the NFL. We wondered if head injuries were the most common injuries among NFL players and if concussion injuries decreased once new rules and technology were introduced in 2017. From there, we explored more topics within the NFL injury realm including predicting injuries based on various explanatory variables and running several ???logistical??? models. 
-
-
-
-
-### Initial Questions: What questions are you trying to answer? How did these questions evolve over the course of the project? What new questions did you consider in the course of your analysis?
+These reports gave us confidence that was a precedence for studying these topics, and helped provide us a road map for asking plausible questions and sourcing data which would allow us to answer our research questions.  
 
 
+### III) Initial Questions
 
+We were initially interested in examining 7 questions, stated below: 
 
+1) Which positions are most at-risk for injuries?
+2) Which injuries are most common in the NFL?
+3) Which teams have the most injuries, and are these teams consistently the same ones year over year?
+4) How has injury incidence evolved over time in the NFL? 
+5) Can we identify an association between weather conditions and injury risk?
+6) What’s the distribution of injury duration? How many games must a player typically miss after being injured, and how does this vary by injury type?
+7) What is the relationship between body type (e.g., height, weight, and BMI) and injury risk? What about age?  
 
-### Data: Source, scraping method, cleanup, etc.
+We ultimately decided to only consider questions 1-4, for a few reasons. 
 
-Source & Scraping method --> Zach
+For question 5, we ran into a time constraint: because we built our own data for this project by web scraping pro-football-reference.com instead of using a pre-built dataset, finding and building the additional data that would be needed to answer our question about weather conditions would have cost time that was better spent answering questions 1-4 to the best of our abilities.  
+
+We decided against studying questions 6 because as we began to work more closely with our dataset, we realized that the structure of our injury data source did not lend itself to answering our question about injury duration. It was not possible to reliably discern the length of time each athlete was injured due to one particular injury because, for example, it was common for athlete to have multiple injuries at once. Not to mention: we realized there was no way to know the duration of injuries that were incurred at the end of the season and which healed in the off-season.  
+
+As for question 7, we realized that this question could be subsumed by other questions under consideration. For example, in our analysis of question 1 we ran a logistic regression predicting binary injury occurrence using the covariates under study in question 7.   
+
+### IV) Data: Source, scraping method, cleanup, etc.
+
+**1) Data source**
+Our data source was [pro-football-reference.com](pro-football-reference.com). 
+
+**2) Web scraping method**
+
+**3) Data cleaning**
+
+**a) Data shaping**
+
+**b) Injury classification**
 
 Once the data was scraped, there were issues with the free text in the injury column. In order to work with this data set to answer some of our primary questions, we needed to clean the data in such a way that the injuries could be easily modeled and analyzed. With so many injuries initially reported, as seen in the exploratory analysis below, we grouped the injuries into 8 main categories based on a part of the body. These included: Head, Shoulder, Upper Torso, Lower Torso, Arm, Hand, Leg and Foot. This way, the distribution of injuries was much easier to evaluate and draw conclusions from all while still keeping the injury data significant to each player. Once this decision was made, we went about the cleanup of the free text by first removing any special characters separating injuries from each other (mostly "\") and replacing them with a space. Many injuries were read like : "knee arm concussion head" as one large string. To deal with this issue we created a code and function that allowed each specific injury to be re-coded in its appropriate category. For example the above string would be recoded as "leg arm head head". Therefore we classified this player as having 1 leg injury, 1 arm injury and 2 head injuries. Once the injuries were re-coded, we used the mutate() function and created count columns for each of 8 body part injuries summing up how many of those injuries each player had. Once this was complete, we used the group_by() function and the summarise() function to obtain the the total counts of each body part injury. This way, we were able to move forward with answering some of our primary questions with a data set that was usable. 
 
+### V) Exploratory Analysis: What visualizations did you use to look at your data in different ways? What are the different statistical methods you considered? Justify the decisions you made, and show any major changes to your ideas. How did you reach these conclusions?
+[TODO: We need to have consistent style for charts. I vote using theme_economist() from the ggthemes library] 
 
-### Exploratory Analysis: What visualizations did you use to look at your data in different ways? What are the different statistical methods you considered? Justify the decisions you made, and show any major changes to your ideas. How did you reach these conclusions?
+[TODO: We create the same datasets multiple times in each of our analyses, we do not want to include this code in the Rmd file itself, and we definitely don't want to include it multiple times. We should 1) identify the datasets that we need to generate the charts below, 2) create and save these datasets in the Data folder as CSVs, 3) just refer to these datasets here for graphing results] 
 
-Have to put in some code here, maybe we can meet one day and fill this out together so it doesn't get too confusing?
+We conducted exploratory data analysis on each of our 4 questions of interest separately. Below we will describe initial analysis and results for each question. 
+
+##### Question 1: Which positions are most at-risk for injuries?
+To answer this question, we first considered the total count of injuries for each position in our dataset over the 2009-2021 period. 
+
+```{r echo=FALSE, message=FALSE}
+# Load injuries data
+library(knitr)
+library(AER)
+library(caret)
+library(e1071)
+library(eeptools)
+library(foreign)
+library(gam)
+library(ggrepel)
+library(ggthemes)
+library(gridExtra)
+library(lubridate)
+library(magrittr)
+library(nnet)
+library(pander)
+library(pROC)
+library(pscl)
+library(randomForest)
+library(rpart)
+library(splines)
+library(splines2)
+library(splitstackshape)
+library(tidyverse)
+library(VGAM)
+library(vcd)
+library(MASS)
+library(dplyr)
+
+injured = read.csv("Data/all_injuries_clean.csv")
+
+fix_nfl_names <- function(x){ #https://rdrr.io/github/papagorgio23/bettoR/src/R/fix_nfl_names.R
+  x[grep("Arizona Cardinals", x, ignore.case=TRUE)] <- "ARI"
+  x[grep("Atlanta Falcons", x, ignore.case=TRUE)] <- "ATL"
+  x[grep("Baltimore Ravens", x, ignore.case=TRUE)] <- "BAL"
+  x[grep("Buffalo Bills", x, ignore.case=TRUE)] <- "BUF"
+  x[grep("Carolina Panthers", x, ignore.case=TRUE)] <- "CAR"
+  x[grep("Chicago Bears", x, ignore.case=TRUE)] <- "CHI"
+  x[grep("Cincinnati Bengals", x, ignore.case=TRUE)] <- "CIN"
+  x[grep("Cleveland Browns", x, ignore.case=TRUE)] <- "CLE"
+  x[grep("Dallas Cowboys", x, ignore.case=TRUE)] <- "DAL"
+  x[grep("Denver Broncos", x, ignore.case=TRUE)] <- "DEN"
+  x[grep("Detroit Lions", x, ignore.case=TRUE)] <- "DET"
+  x[grep("Green Bay Packers", x, ignore.case=TRUE)] <- "GB"
+  x[grep("Houston Texans", x, ignore.case=TRUE)] <- "HOU"
+  x[grep("Indianapolis Colts", x, ignore.case=TRUE)] <- "IND"
+  x[grep("Jacksonville Jaguars", x, ignore.case=TRUE)] <- "JAX"
+  x[grep("Kansas City Chiefs", x, ignore.case=TRUE)] <- "KC"
+  x[grep("Miami Dolphins", x, ignore.case=TRUE)] <- "MIA"
+  x[grep("Minnesota Vikings", x, ignore.case=TRUE)] <- "MIN"
+  x[grep("New England Patriots", x, ignore.case=TRUE)] <- "NE"
+  x[grep("New Orleans Saints", x, ignore.case=TRUE)] <- "NO"
+  x[grep("New York Jets", x, ignore.case=TRUE)] <- "NYJ"
+  x[grep("New York Giants", x, ignore.case=TRUE)] <- "NYG"
+  x[grep("Las Vegas Raiders", x, ignore.case=TRUE)] <- "OAK"
+  x[grep("Philadelphia Eagles", x, ignore.case=TRUE)] <- "PHI"
+  x[grep("Pittsburgh Steelers", x, ignore.case=TRUE)] <- "PIT"
+  x[grep("Los Angeles Chargers", x, ignore.case=TRUE)] <- "LAC"
+  x[grep("Los Angeles Rams", x, ignore.case=TRUE)] <- "LAR"
+  x[grep("San Francisco 49ers", x, ignore.case=TRUE)] <- "SF"
+  x[grep("Seattle Seahawks", x, ignore.case=TRUE)] <- "SEA"
+  x[grep("Tampa Bay Buccaneers", x, ignore.case=TRUE)] <- "TB"
+  x[grep("Tennessee Titans", x, ignore.case=TRUE)] <- "TEN"
+  x[grep("Washington Redskins", x, ignore.case=TRUE)] <- "WAS"
+  return(x)
+}
+age <- function(dob, age.day = today(), units = "years", floor = TRUE) {
+    calc.age = interval(dob, age.day) / duration(num = 1, units = units)
+    if (floor) return(as.integer(floor(calc.age)))
+    return(calc.age)
+}
+# Clean injuries data
+injured = injured %>% 
+  mutate(short_team_name = fix_nfl_names(full_team), injury = rep(1, nrow(injured))) %>%
+  mutate(total_injuries = dplyr::select(injured, head, shoulder, upper_torso, lower_torso, arm, hand, leg, foot) %>% rowSums) %>% 
+  filter(total_injuries != 0)
+
+# Load players data
+players_dat = read.csv("Data/all_player_demographic_clean.csv")
+
+# Clean players data
+players = players_dat %>% 
+  mutate(short_team_name = fix_nfl_names(full_team), 
+         age = age(ymd(birthdate)), bmi = (weight_pounds / height_inches^2)*703) %>% 
+  mutate(age = age - (2021 - year))
+
+# Merge data for use in analysis
+injuries = injured %>% left_join(players, by = c("name", "full_team", "short_team_name", "year", "team")) %>%
+  filter(position_id != "") %>% 
+  mutate(injury = factor(injury), position_id = factor(position_id))
+
+players = players %>% left_join(injured, by = c("name", "full_team", "short_team_name", "year", "team")) %>% 
+  mutate(injury = factor(ifelse(is.na(injury), 0, 1))) %>%
+  filter(position_id != "") %>% 
+  mutate(injury = factor(injury), position_id = factor(position_id))
+```
+
+```{r, echo=FALSE}
+number_injury = injuries %>% 
+  group_by(position_id, year) %>% 
+  count()
+
+number_injury %>% group_by(position_id) %>% 
+  summarise(mean = mean(n), 
+            sd = sd(n), 
+            Q1 = quantile(n, probs = 0.25),
+            median = median(n),
+            Q3 = quantile(n, probs = 0.75)
+  ) %>% 
+  pander
+```
+[TODO: This only counts unique injuries per person. It should count total injuries per person.]
+
+According to this tabulation, we see that [TODO: fill in summary of results].
+
+Of course, it is not especially instructive to look at raw counts of injuries by position, because far more players play some positions than others. We would instead like to divide the total number of injuries by the number of players playing each position to normalize these counts over the 2009-2021 period in question, as shown below Going forward, we will consider only normalized injury counts by position. 
+
+[TODO: insert table described above]
+[TODO: add summary of results, note how they are different from raw counts]
+
+In addition to total adjusted-injury counts over the total 2009-2021 period, we are also concerned with the evolution of these counts over time. We chart this below. 
+
+```{r, echo=FALSE}
+number_injury %>% ggplot(aes(year, n, color = position_id)) +
+                    geom_line() +
+                    xlab("Year") +
+                    ylab("# of Players Injured") +
+                    scale_color_discrete(name = "Position") +
+                    ggtitle("Number of Players Injured by Position (2009 - Present)")
+```
+[TODO: change this to adjusted injury count; change this to counting injuries per player instead of using binary classification]
+[TODO: add summary]
+[TODO: check if adding log Y axis helps here and include if it does]
+
+We are also interested in a classification task pertaining to this question: we would like predict whether a player will be injured in a given season given their position, as well as other player information (e.g., height, weight, age, team), and, where possible, interpret odds ratios explaining the relationship between player position and injury risk.
+
+In order to perform this classification task, we consider three classification algorithms: logistic regression, kNN, and Random Forest. [TODO: add explanation of why we used these 3 models in this case.] We proceed with exploratory analysis to assess the suitability of logistic regression for this task, and to identify variables which are likely to be highly predictive of our binary outcome injury status.
+
+[TODO: Need to decide if you are doing classification for a single year or all years and including year as a covariate. And then adjust graphs below accordingly.]
+
+We first consider the total number of players injuried/non-injured by each position. 
+
+```{r, echo=FALSE}
+players$position_id = 
+  fct_relevel(players$position_id, c("DEF", "OL", "WR", "RB", "TE", "QB", "K", "P"))
+
+players %>% 
+  ggplot(aes(position_id, fill = injury)) +
+    geom_bar(position = "dodge") +
+    xlab("Position") +
+    ylab("# of Players") +
+    ggtitle("Injured Players by Position in 2018") +
+    scale_fill_manual(name = "Injury", guide = guide_legend(reverse=TRUE), values = c("#619CFF", "#F8766D"))
+```
+[TODO: I don't think it is wise to include this plot because we do not have faith in counts of non-injured players. Also I changed the Y axis title.]
+
+We are also interested in the average bmi of injured and non-injured players, shown below. 
+```{r, echo=FALSE}
+players %>% ggplot(aes(injury, bmi)) +
+              geom_boxplot()
+```
+The absence of any significant difference between groups suggests that bmi will not be a significant predictor in our Logistic model.
+
+We also evaluate the relationship between injury status and age. 
+```{r, echo=FALSE}
+injuries %>% filter(year == 2018) %>% 
+             ggplot(aes(age)) +
+               geom_histogram(binwidth = 0.5) +
+               xlab("Age") +
+               ylab("# of Players Injured") +
+               ggtitle("# of Players Injured by Age in 2018") +
+               scale_x_continuous(breaks = seq(0, 50, 1))
+```
+[TODO: I think we need to adjust for the number of players at each age.]
+
+```{r, echo=FALSE}
+players %>% ggplot(aes(age, fill = injury)) +
+              geom_histogram(binwidth = 0.5, position = "dodge") +
+              xlab("Age") +
+              ylab("# of Players Injured") +
+              ggtitle("# of Injured Players by Age in 2018") +
+              scale_x_continuous(breaks = seq(0, 50, 1)) +
+              scale_fill_manual(name = "Injury", 
+                                guide = guide_legend(reverse=TRUE), values = c("#619CFF", "#F8766D"))
+
+#injury_age %>% 
+#  group_by(bodypart) %>%
+#  filter(age == 37) %>%
+#  summarise(counts = sum(counts)) %>%
+#  ggplot(aes(x = reorder(bodypart, - counts), y = counts)) +
+#  geom_col() +
+#  ylab("Count") +
+#  ggtitle("Distriubtion of Injuries 37 Year Old NFL players")
+```
+[TODO: I don't think we can include this because we don't have all non-injured players. I think if instead of counts you do average injury status at each age this will work.]
+
+[TODO: add logistic model, and explain why you specified it in that way]
+[TODO: kNN model]
+[TODO: add Random Forest]
+[TODO: add ROC plot but save interpretation and best model selection for results section (I think?)]
+
+##### Question 2: Which injuries are most common in the NFL?
+
+We are also interested in understanding which injuries are most common in the NFL; we begin by simply charting the distribution of injuries, using the very granular injury type classifications available from our data source. 
+
+```{r, echo=FALSE, message = FALSE}
+library(dplyr)
+library(stringr)
+library(tidytext)
+library(gsubfn)
+
+injuries <- read.csv("Data/all_injuries_clean.csv")
+injuries <- injuries %>% mutate(injury_types = tolower(injury_types))
+
+concussion <- sum(str_detect(injuries$injury_types, pattern = "concussion"))
+head <- sum(str_detect(injuries$injury_types, pattern = "head"))
+neck <- sum(str_detect(injuries$injury_types, pattern = "neck"))
+eye <- sum(str_detect(injuries$injury_types, pattern = "eye"))
+ear <- sum(str_detect(injuries$injury_types, pattern = "ear"))
+chin <- sum(str_detect(injuries$injury_types, pattern = "chin"))
+migraine <- sum(str_detect(injuries$injury_types, pattern = "migraine|migraines"))
+jaw <- sum(str_detect(injuries$injury_types, pattern = "jaw"))
+nose <- sum(str_detect(injuries$injury_types, pattern = "nose"))
+tooth <- sum(str_detect(injuries$injury_types, pattern = "tooth"))
+stinger <- sum(str_detect(injuries$injury_types, pattern = "stinger"))
+faciallaceration <- sum(str_detect(injuries$injury_types, pattern = "faciallaceration"))
+eyelid <- sum(str_detect(injuries$injury_types, pattern = "eyelid"))
+facial <- sum(str_detect(injuries$injury_types, pattern = "facial"))
+mouth <- sum(str_detect(injuries$injury_types, pattern = "mouth"))
+nose <- sum(str_detect(injuries$injury_types, pattern = "nose"))
+throat <- sum(str_detect(injuries$injury_types, pattern = "throat"))
+seizure <- sum(str_detect(injuries$injury_types, pattern = "seizure"))
+
+
+
+individual_head <- c(concussion, head, neck, eye, ear, chin, migraine, jaw, nose, tooth, stinger, faciallaceration, eyelid, facial, mouth, nose, throat, seizure)
+total_head <- concussion + head + neck + eye + ear + chin + migraine + jaw + nose + tooth + stinger + faciallaceration + eyelid + facial + mouth + nose + throat + seizure
+shoulder <- sum(str_detect(injuries$injury_types, pattern = "shoulder|leftshoulder|jointshoulder|rightshoulder"))
+clavicle <- sum(str_detect(injuries$injury_types, pattern = "clavicle"))
+collarbone <- sum(str_detect(injuries$injury_types, pattern = "collarbone"))
+scapula <- sum(str_detect(injuries$injury_types, pattern = "scapula"))
+sternoclavicular <- sum(str_detect(injuries$injury_types, pattern = "sternoclavicular"))
+
+
+individual_shoulder <- c(shoulder, clavicle, collarbone, scapula, sternoclavicular)
+total_shoulder <- shoulder + clavicle + collarbone + scapula + sternoclavicular
+rib <- sum(str_detect(injuries$injury_types, pattern = "rib|ribs"))
+back <- sum(str_detect(injuries$injury_types, pattern = "back"))
+pectoral <- sum(str_detect(injuries$injury_types, pattern = "pectoral|pec"))
+chest <- sum(str_detect(injuries$injury_types, pattern = "chest"))
+oblique <- sum(str_detect(injuries$injury_types, pattern = "oblique"))
+lumbar <- sum(str_detect(injuries$injury_types, pattern = "lumbar"))
+core <- sum(str_detect(injuries$injury_types, pattern = "core"))
+spine <- sum(str_detect(injuries$injury_types, pattern = "spine"))
+trapezius <- sum(str_detect(injuries$injury_types, pattern = "trapezius"))
+kidney <- sum(str_detect(injuries$injury_types, pattern = "kidney"))
+lung <- sum(str_detect(injuries$injury_types, pattern = "lung"))
+heart <- sum(str_detect(injuries$injury_types, pattern = "heart"))
+abdominal <- sum(str_detect(injuries$injury_types, pattern = "abdomen|abdominal"))
+solarplexus <- sum(str_detect(injuries$injury_types, pattern = "solarplexus"))
+spleen <- sum(str_detect(injuries$injury_types, pattern = "spleen"))
+hernia <- sum(str_detect(injuries$injury_types, pattern = "hernia"))
+arrhythmia <- sum(str_detect(injuries$injury_types, pattern = "arrhythmia"))
+liver <- sum(str_detect(injuries$injury_types, pattern = "liver"))
+stomach <- sum(str_detect(injuries$injury_types, pattern = "stomach"))
+appendix <- sum(str_detect(injuries$injury_types, pattern = "appendix"))
+
+
+total_uppertorso <- rib + back + pectoral + chest + oblique + lumbar + core + spine + trapezius + kidney + lung + heart + abdominal + solarplexus + spleen + hernia + arrhythmia + liver + stomach + appendix
+individual_uppertorso <- c(rib, back, pectoral, chest, oblique, lumbar, core, spine, trapezius, kidney, lung, heart, abdominal, solarplexus, spleen, hernia, arrhythmia, liver, stomach, appendix)
+
+glute <- sum(str_detect(injuries$injury_types, pattern = "glute|buttocks"))
+hip <- sum(str_detect(injuries$injury_types, pattern = "hip|righthip|lefthip"))
+pelvis <- sum(str_detect(injuries$injury_types, pattern = "pelvis"))
+tailbone <- sum(str_detect(injuries$injury_types, pattern = "tailbone"))
+
+
+total_lowertorso <- glute + hip + pelvis + tailbone
+individual_lowertorso <- c(glute, hip, pelvis, tailbone)
+
+arm <- sum(str_detect(injuries$injury_types, pattern = "arm|forearm|rightupperarm"))
+elbow <- sum(str_detect(injuries$injury_types, pattern = "elbow|rightelbow|leftelbow"))
+tricep <- sum(str_detect(injuries$injury_types, pattern = "tricep|triceps"))
+bicep <- sum(str_detect(injuries$injury_types, pattern = "bicep|biceps"))
+
+total_arm <- arm + elbow + tricep + bicep
+individual_arm <- c(arm, elbow, tricep, bicep)
+
+
+hand <- sum(str_detect(injuries$injury_types, pattern = "righthand|lefthand|hand"))
+thumb <- sum(str_detect(injuries$injury_types, pattern = "thumb|rightthumb|leftthumb"))
+finger <- sum(str_detect(injuries$injury_types, pattern = "finger|rightfinger|leftfinger"))
+wrist <- sum(str_detect(injuries$injury_types, pattern = "wrist|rightwrist|leftwrist"))
+
+total_hand <- hand + thumb + finger + wrist
+individual_hand <- c(hand, thumb, finger, wrist)
+
+hamstring <- sum(str_detect(injuries$injury_types, pattern = "hamstring|righthamstring|lefthamstring"))
+knee <- sum(str_detect(injuries$injury_types, pattern = "knee|rightknee|leftknee|acl|mcl|meniscus|bothknees"))
+thigh <- sum(str_detect(injuries$injury_types, pattern = "thigh|rightthigh|leftthigh"))
+calf <- sum(str_detect(injuries$injury_types, pattern = "calf|leftcalf|rightcalf"))
+quadricep <- sum(str_detect(injuries$injury_types, pattern = "quadricep|leftquadricep|rightquadricep|quad"))
+groin <- sum(str_detect(injuries$injury_types, pattern = "groin|rightgroin|leftgroin"))
+lowerleg <- sum(str_detect(injuries$injury_types, pattern = "tibia|fibula|lowerleg|shin|rightshin|leftshin"))
+adductor <- sum(str_detect(injuries$injury_types, pattern = "adductor"))
+contusion <- sum(str_detect(injuries$injury_types, pattern = "contusion"))
+
+
+
+total_leg <- hamstring + knee + thigh + calf + quadricep + groin + lowerleg + adductor + contusion
+individual_leg <- c(hamstring, knee, thigh, calf, quadricep, groin, lowerleg, adductor, contusion)
+
+foot <- sum(str_detect(injuries$injury_types, pattern = "foot|rightfoot|leftfoot"))
+ankle <- sum(str_detect(injuries$injury_types, pattern = "ankle|rightankle|leftankle"))
+achilles <- sum(str_detect(injuries$injury_types, pattern = "achilles"))
+toe <- sum(str_detect(injuries$injury_types, pattern = "toe|toes"))
+heel <- sum(str_detect(injuries$injury_types, pattern = "heel"))
+
+total_foot <- foot + ankle + achilles + toe + heel
+individual_foot <- c(foot, ankle, achilles, toe, heel)
+
+injurytype <- c("concussion", "head", "neck", "eye", 'ear', 'chin', 'migraine', 'jaw', 'nose', 'tooth', "stinger", "faciallaceration", "eyelid", "facial", "mouth", "nose", "throat", "seizure",
+                "shoulder", "clavicle", "collarbone", "scapula", "sternoclavicular",
+                'rib', 'back', 'pectoral', 'chest', 'oblique', 'lumbar', "core", "spine", 'trapezius', 'kidney', 'lung', 'heart', 'abdominal', 'solarplexus', 'spleen', 'hernia', "arrhythmia", "liver", "stomach", "appendix",
+                'glute', 'hip', 'pelvis', "tailbone",
+                'arm', 'elbow', 'tricep', "bicep",
+                'hand', 'thumb', 'finger', 'wrist',
+                'hamstring', 'knee', 'thigh', 'calf', 'quadricep',  'groin', 'lowerleg', 'adductor', "contusion",
+                'foot', 'ankle', 'achilles', 'toe', 'heel')
+
+count <- c(concussion, head, neck, eye, ear, chin, migraine, jaw, nose, tooth, stinger, faciallaceration, eyelid, facial, mouth, nose, throat, seizure, 
+           shoulder, clavicle, collarbone, scapula, sternoclavicular,
+           rib, back, pectoral, chest, oblique, lumbar, core, spine, trapezius, kidney, lung, heart, abdominal, solarplexus, spleen, hernia, arrhythmia, liver, stomach, appendix,
+           glute, hip, pelvis, tailbone,
+           arm, elbow, tricep, bicep,
+           hand, thumb, finger, wrist,
+           hamstring, knee, thigh, calf, quadricep, groin, lowerleg, adductor, contusion,
+           foot, ankle, achilles, toe, heel)
+
+bodypart <- c(rep("Head", length(individual_head)), 
+              rep("Shoulder", length(individual_shoulder)), 
+              rep("Upper Torso", length(individual_uppertorso)),
+              rep("Lower Torso", length(individual_lowertorso)),
+              rep("Arm", length(individual_arm)),
+              rep("Hand", length(individual_hand)),
+              rep("Leg", length(individual_leg)),
+              rep("Foot", length(individual_foot))
+              )
+
+injury_count <- data.frame(injurytype, count, bodypart)
+
+# injury_count %>% arrange(desc(count))
+```
+
+```{r, echo=FALSE, message=FALSE}
+injury_count %>%
+  mutate(injurytype = reorder_within(injurytype,count, bodypart)) %>%
+  ggplot(aes(y=injurytype, x=count)) +
+  geom_col()+
+  scale_y_reordered() +
+  xlab("Count") +
+  ylab("Injury Type") + 
+  ggtitle("Distribution of Specific Injury Types")
+
+```
+
+[TODO: add summary and add less granular grouping chart]
+
+##### Question 3: Which teams have the most injuries, and are these teams consistently the same ones year over year?
+
+```{r, echo=FALSE, message=FALSE}
+library(tidyverse)
+library(eeptools)
+library(vcd)
+library(ggthemes)
+library(lubridate)
+```
+
+```{r, echo=FALSE, message = FALSE}
+injuries = read.csv("Data/all_injuries_clean.csv")
+players = read.csv("Data/all_player_demographic_clean.csv")
+
+# Merge data
+injuries_expanded = left_join(injuries, players, by = c("name", "team", "year", "full_team"))
+
+# Step 1: Generate Injuries by Team-Year Summary Data
+injuries_by_team_year = injuries_expanded %>% 
+  filter(year < 2021) %>% 
+  mutate(injury_count = rowSums(dplyr::select(.,head:foot))) %>% 
+  group_by(year, full_team) %>% 
+  summarize(all_injuries = sum(injury_count)) %>% 
+  group_by(full_team) %>% 
+  mutate(cumsum_all_injuries = cumsum(all_injuries))
+
+# Step 2: Generate Injuries by Team Summary Data
+injuries_by_team = injuries_by_team_year %>% 
+  group_by(full_team) %>% 
+  summarize(
+    total_injuries = sum(all_injuries),
+    median_injuries = median(all_injuries),
+    max_injuries = max(all_injuries),
+  )
+
+# Step 3: Join data from Step 1 and Step 2 
+injuries_by_team_year_with_summary = left_join(injuries_by_team_year, injuries_by_team, by = "full_team")
+```
+
+We first consider the total injuries per year over the entire 2009-2021 period, as well as the max injuries that a team had in a single season over this period. 
+
+
+```{r, echo =FALSE}
+# Plot 1
+p1 = ggplot(data = injuries_by_team, aes(x = total_injuries, y = reorder(full_team, total_injuries))) +
+  geom_col() + 
+  theme_economist() + 
+  xlab("Total Injuries") +
+  ylab(element_blank()) +
+  ggtitle("Total Injuries by Team, 2009-2020")
+p1
+```
+
+```{r, echo=FALSE}
+# Plot 2
+p2 = ggplot(data = injuries_by_team, aes(x = max_injuries, y = reorder(full_team, max_injuries))) +
+  geom_col() + 
+  theme_economist() + 
+  xlab("Total Injuries") +
+  ylab(element_blank()) +
+  ggtitle("Max Injuries in a Single Season, 2009-2020")
+p2
+```
+
+
+It is clear that the Houston Texans have the most total injuries over this period, as well as the maximum injuries. Let's take a look at the distribution of injury counts over each year in the 2009-2021 period, as well as the distirbution of injury counts as shown in a boxplot.   
+
+
+```{r, echo=FALSE}
+# Plot 3
+p3 = ggplot(data = injuries_by_team_year_with_summary, aes(x = all_injuries, y = reorder(full_team, median_injuries))) +
+  geom_boxplot() + 
+  theme_economist() + 
+  xlab("Injuries Per Year") +
+  ylab(element_blank()) +
+  ggtitle("Injuries Per Year (2009-2020), by Team")
+p3
+```
+
+```{r, echo=FALSE}
+# Plot 4
+p4 = ggplot(data = injuries_by_team_year_with_summary, aes(x = year, y = full_team)) +
+  geom_tile(aes(fill = all_injuries), color = "white") + 
+  scale_fill_distiller(palette = "YlGnBu", direction = 1) +
+  xlab("Year") +
+  ylab(element_blank()) +
+  ggtitle("Injuries by Team") +
+  theme_economist() +
+  theme(legend.position = "right") + 
+  labs(fill = "Injuries")
+p4
+```
+From the final chart it appears that the Texans' large number of injuries seem to be concentrated in the 2011-2013 range, after which their injury rates appear to be on par with the rest of the league. 
+
+[TODO: Discuss how Poisson regression wasn't suitable because of overdispersion, and show results.]
+
+##### Question 4: How has injury incidence evolved over time in the NFL?
 
 Willow Include: Initial EDA with no cleanup, new EDA with cleanup (for all players), EDA based on Offense or Defense, EDA based on age, EDA based on year
 
-
-
-### Final Analysis: What did you learn about the data? How did you answer the questions? How can you justify your answers? Note that 1 type of analysis per team member is required. A Shiny app counts as a type of analysis.
-
+### VI) Final Analysis: What did you learn about the data? How did you answer the questions? How can you justify your answers? Note that 1 type of analysis per team member is required. A Shiny app counts as a type of analysis.
+[TODO: We need to decide what qualifies as "exploratory analysis" and what qualifies as "final analysis" for each question.]
 
 I'm thinking everyone can put down what they discovered for their analysis here 
 

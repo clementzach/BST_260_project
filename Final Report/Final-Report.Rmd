@@ -529,9 +529,8 @@ p4 = ggplot(data = injuries_by_team_year_with_summary, aes(x = year, y = full_te
   labs(fill = "Injuries")
 p4
 ```
-From the final chart it appears that the Texans' large number of injuries seem to be concentrated in the 2011-2013 range, after which their injury rates appear to be on par with the rest of the league. 
 
-[TODO: Discuss how Poisson regression wasn't suitable because of overdispersion, and show results.]
+From the final chart it appears that the Texans' large number of injuries seem to be concentrated in the 2011-2013 range, after which their injury rates appear to be on par with the rest of the league. 
 
 ##### Question 4: How has injury incidence evolved over time in the NFL?
 

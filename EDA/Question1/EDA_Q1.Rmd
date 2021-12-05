@@ -133,12 +133,12 @@ injured = injured %>%
 
 ### Load demographic data
 ```{r, eval=F}
-#players_dat = read.csv("../../Data/all_player_demographic_clean.csv")
-
-players = players_dat %>% 
-  mutate(short_team_name = fix_nfl_names(full_team), 
-         age = age(ymd(birthdate)), bmi = (weight_pounds / height_inches^2)*703) %>% 
-  mutate(age = age - (2021 - year))
+# #players_dat = read.csv("../../Data/all_player_demographic_clean.csv")
+# 
+# players = players_dat %>% 
+#   mutate(short_team_name = fix_nfl_names(full_team), 
+#          age = age(ymd(birthdate)), bmi = (weight_pounds / height_inches^2)*703) %>% 
+#   mutate(age = age - (2021 - year))
 
 ```
 
@@ -161,9 +161,14 @@ players = players_dat %>%
 #write.csv(injuries, "injury_dat_q1.csv", row.names = F)
 #write.csv(players, "players_dat_q1.csv", row.names = F)
 
-injuries = read.csv("injury_dat.q1.csv")
-players = read.csv("players_dat.q1.csv")
+```
 
+&nbsp;
+
+### Load data from .csv files saved to EDA Question1 folder
+```{r}
+injuries = read.csv("../../EDA/Question1/injury_dat.q1.csv")
+players = read.csv("../../EDA/Question1/players_dat.q1.csv")
 ```
 
 &nbsp;
@@ -189,25 +194,25 @@ number_injury %>% group_by(position_id) %>%
 
 
 ```{r}             
-number_injury %>% ggplot(aes(year, n, color = position_id)) +
-                    geom_line() +
-                    xlab("Year") +
-                    ylab("# of Players Injured") +
-                    scale_color_discrete(name = "Position") +
-                    ggtitle("Number of Players Injured by Position (2009 - Present)")
+# number_injury %>% ggplot(aes(year, n, color = position_id)) +
+#                     geom_line() +
+#                     xlab("Year") +
+#                     ylab("# of Players Injured") +
+#                     scale_color_discrete(name = "Position") +
+#                     ggtitle("Number of Players Injured by Position (2009 - Present)")
 ```
 
 &nbsp;
 
 ### Maybe a $\log_{10}$ transform could help
 ```{r}             
-number_injury %>% ggplot(aes(year, n, color = position_id)) +
-                    geom_line() +
-                    xlab("Year") +
-                    ylab(bquote("# of Players Injured ("*log_10* "scale)")) +
-                    scale_color_discrete(name = "Position") +
-                    ggtitle("Number of Players Injured (log_10 scale) by Position (2009 - Present)") +
-                    scale_y_log10()
+# number_injury %>% ggplot(aes(year, n, color = position_id)) +
+#                     geom_line() +
+#                     xlab("Year") +
+#                     ylab(bquote("# of Players Injured ("*log_10* "scale)")) +
+#                     scale_color_discrete(name = "Position") +
+#                     ggtitle("Number of Players Injured (log_10 scale) by Position (2009 - Present)") +
+#                     scale_y_log10()
 ```
 
 **if we use this graph, we should adjust for # of players per position**
@@ -219,7 +224,11 @@ number_injury %>% ggplot(aes(year, n, color = position_id)) +
 exp_injuries_byYear <- players %>% 
   filter(!is.na(total_injuries)) %>% 
   group_by(position_id, year) %>% 
-  summarise(avg_total_injuries = sum(total_injuries)/n()) # trying to divide by number of players to get avg. for each player
+  summarise(avg_total_injuries = sum(total_injuries)/n(),
+            SD = sd(total_injuries), 
+            Q1 = quantile(total_injuries, probs = 0.25),
+            Median = median(total_injuries),
+            Q3 = quantile(total_injuries, probs = 0.75)) # trying to divide by number of players to get avg. for each player
 
 exp_injuries_byYear 
 
@@ -251,7 +260,6 @@ injuries %>% ggplot(aes(year)) +
 &nbsp;
 
 ### We now will switch to our second analysis (Machine Learning)
-* For the next analyses, we will only look at the **2018** season
 * We will perform logistic regression, kNN, and random forest using the binary outcome `injury`. 
 * We will then compare the results of the different methods based on accuracy, sensitivity/specificity, and ROC/AUC.
 * Logical potential predictors: position_id, height_inches, weight_pounds, game_starter, age, bmi
@@ -308,63 +316,69 @@ players %>% ggplot(aes(injury, bmi)) +
 
 &nbsp;
 
-**The absence of any significant difference between groups suggests that `bmi` will not be a significiant predictor in our Logistic model.**
+```{r}
+players %>% ggplot(aes(injury, age)) +
+              geom_boxplot()
+```
+
+
+**The absence of any significant difference between groups suggests that `bmi` will not be a significiant predictor in our Logistic model. However, the boxplots for `age` suggest the opposite, mainly that `age` may be a sigificant predictor.**
 
 &nbsp;
 
-### What is the distribution of `injury` by `age` in 2018?
-```{r}
-injuries %>% filter(year == 2018) %>% 
-             ggplot(aes(age)) +
-               geom_histogram(binwidth = 0.5) +
-               xlab("Age") +
-               ylab("# of Players Injured") +
-               ggtitle("# of Players Injured by Age in 2018") +
-               scale_x_continuous(breaks = seq(0, 50, 1))
-```
+<!-- ### What is the distribution of `injury` by `age` in 2018? -->
+<!-- ```{r} -->
+<!-- injuries %>% filter(year == 2018) %>%  -->
+<!--              ggplot(aes(age)) + -->
+<!--                geom_histogram(binwidth = 0.5) + -->
+<!--                xlab("Age") + -->
+<!--                ylab("# of Players Injured") + -->
+<!--                ggtitle("# of Players Injured by Age in 2018") + -->
+<!--                scale_x_continuous(breaks = seq(0, 50, 1)) -->
+<!-- ``` -->
 
-&nbsp;
+<!-- &nbsp; -->
 
-## Try side by side bars for `age`
-```{r}
-players %>% ggplot(aes(age, fill = injury)) +
-              geom_histogram(binwidth = 0.5, position = "dodge") +
-              xlab("Age") +
-              ylab("# of Players Injured") +
-              ggtitle("# of Injured Players by Age in 2018") +
-              scale_x_continuous(breaks = seq(0, 50, 1)) +
-              scale_fill_manual(name = "Injury", 
-                                guide = guide_legend(reverse=TRUE), values = c("#619CFF", "#F8766D"))
-  
-```
+<!-- ## Try side by side bars for `age` -->
+<!-- ```{r} -->
+<!-- players %>% ggplot(aes(age, fill = injury)) + -->
+<!--               geom_histogram(binwidth = 0.5, position = "dodge") + -->
+<!--               xlab("Age") + -->
+<!--               ylab("# of Players Injured") + -->
+<!--               ggtitle("# of Injured Players by Age in 2018") + -->
+<!--               scale_x_continuous(breaks = seq(0, 50, 1)) + -->
+<!--               scale_fill_manual(name = "Injury",  -->
+<!--                                 guide = guide_legend(reverse=TRUE), values = c("#619CFF", "#F8766D")) -->
 
-&nbsp;
+<!-- ``` -->
 
-## Try scaling by number of players in each age group
-```{r}
-age_group_size = players %>% group_by(age) %>% count() # get size of each age group
+<!-- &nbsp; -->
 
-injured_age_group_size = players %>% # get size of age group for injured players only
-                          filter(injury == 1) %>% 
-                          group_by(age) %>% 
-                          count()
+<!-- ## Try scaling by number of players in each age group -->
+<!-- ```{r} -->
+<!-- age_group_size = players %>% group_by(age) %>% count() # get size of each age group -->
 
-# Some age groups have no injuries, so the vector lengths differ
-group_size = age_group_size %>% filter(age %in% injured_age_group_size$age) %>% .$n
+<!-- injured_age_group_size = players %>% # get size of age group for injured players only -->
+<!--                           filter(injury == 1) %>%  -->
+<!--                           group_by(age) %>%  -->
+<!--                           count() -->
 
-injured_age_group_size$scaled_n = injured_age_group_size$n / group_size # Scale by group size
-head(injured_age_group_size)
+<!-- # Some age groups have no injuries, so the vector lengths differ -->
+<!-- group_size = age_group_size %>% filter(age %in% injured_age_group_size$age) %>% .$n -->
 
-injured_age_group_size %>% ggplot(aes(age, scaled_n)) +
-                             geom_col() +
-                             xlab("Age") +
-                             ylab("Percentage") +
-                             ggtitle("Percentage of Players Injured by Age Group") +
-                             scale_x_continuous(breaks = seq(0, 50, 1)) +
-                             scale_fill_manual(name = "Injury", 
-                               guide = guide_legend(reverse=TRUE), values = c("#619CFF", "#F8766D"))
-  
-```
+<!-- injured_age_group_size$scaled_n = injured_age_group_size$n / group_size # Scale by group size -->
+<!-- head(injured_age_group_size) -->
+
+<!-- injured_age_group_size %>% ggplot(aes(age, scaled_n)) + -->
+<!--                              geom_col() + -->
+<!--                              xlab("Age") + -->
+<!--                              ylab("Percentage") + -->
+<!--                              ggtitle("Percentage of Players Injured by Age Group") + -->
+<!--                              scale_x_continuous(breaks = seq(0, 50, 1)) + -->
+<!--                              scale_fill_manual(name = "Injury",  -->
+<!--                                guide = guide_legend(reverse=TRUE), values = c("#619CFF", "#F8766D")) -->
+
+<!-- ``` -->
 
 &nbsp;
 

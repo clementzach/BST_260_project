@@ -12,51 +12,60 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r, message=FALSE}
 library(tidyverse)
 library(ggplot2)
+library(ggthemes)
 ```
 
 
 ## Read in and clean injury data
 
 ```{r}
-injuries <- read.csv("Data/all_injuries_clean.csv", stringsAsFactors = FALSE)
-
-# add column for total injuries
-injuries <- injuries %>%
-  mutate(all_injuries = select(injuries, c("head", "shoulder", "upper_torso", "lower_torso", 
-                                           "arm", "hand", "leg", "foot")) %>% rowSums)
-
-# filter out 2021 (partial data for this year)
-injuries <- injuries %>% filter(year != 2021)
+# injuries <- read.csv("../../Data/all_injuries_clean.csv", stringsAsFactors = FALSE) # load data
+# 
+# # add column for total injuries
+# injuries <- injuries %>%
+#   mutate(total_injuries = select(injuries, c("head", "shoulder", "upper_torso", "lower_torso",
+#                                            "arm", "hand", "leg", "foot")) %>% rowSums)
+# 
+# injuries <- injuries %>% 
+#   filter(year != 2021) %>% # filter out 2021 (partial data for this year)
+#   filter(total_injuries != 0) # filter out people who missed due to illness, etc.
+# 
+# write.csv(injuries, "Q4_data.csv", row.names = FALSE)
 ```
 
 
 ## Injuries per Season
 
 ```{r}
+injuries <- read.csv("Q4_data.csv")
+
 # create summarized table
 time_series <- injuries %>%
   group_by(year) %>%
-  summarize(all_injuries = sum(all_injuries))
+  summarize(total_injuries = sum(total_injuries))
 
 # plot
 time_series %>%
-  ggplot(aes(x = year, y = all_injuries)) +
+  ggplot(aes(x = year, y = total_injuries)) +
   geom_line() +
   ggtitle("Injuries per Season") +
   xlab("Year") +
   ylab("Total Number of Injuries") +
-  ylim(0, 2800)
+  ylim(0, 2800) +
+  scale_x_continuous(breaks = seq(2008, 2020, by = 2)) +
+  theme_economist()
 ```
 
 ### As Boxplots
 
 ```{r}
 injuries %>%
-  ggplot(aes(x = as.factor(year), y = all_injuries)) +
+  ggplot(aes(x = as.factor(year), y = total_injuries)) +
   geom_boxplot() +
   ggtitle("Distribution of Number of Injuries per Player") +
   xlab("Year") +
-  ylab("Injuries per Season per Player")
+  ylab("Injuries per Season per Player") +
+  theme_economist()
 ```
 
 
@@ -66,16 +75,17 @@ injuries %>%
 # create summarized table
 time_series_teams <- injuries %>%
   group_by(year, team) %>%
-  summarize(all_injuries = sum(all_injuries))
+  summarize(total_injuries = sum(total_injuries))
 
 # plot
 time_series_teams %>%
-  ggplot(aes(x = year, y = all_injuries, color = team)) +
+  ggplot(aes(x = year, y = total_injuries, color = team)) +
   geom_line() +
   ggtitle("Injuries per Season by Team") +
   xlab("Year") +
   ylab("Total Number of Injuries") +
-  ylim(0, 175)
+  ylim(0, 175) +
+  scale_x_continuous(breaks = seq(2008, 2020, by = 2))
 ```
 
 ## Concussions per Season
@@ -93,7 +103,9 @@ concussions %>%
   ggtitle("Concussions per Season") +
   xlab("Year") +
   ylab("Total Number of Injuries") +
-  ylim(0, 300)
+  ylim(0, 300) +
+  scale_x_continuous(breaks = seq(2008, 2020, by = 2)) +
+  theme_economist()
 ```
 
 ### Concussions per Season by Team
@@ -110,7 +122,8 @@ concussions_team %>%
   ggtitle("Concussions per Season") +
   xlab("Year") +
   ylab("Total Number of Injuries") +
-  ylim(0, 20)
+  ylim(0, 20) +
+  scale_x_continuous(breaks = seq(2008, 2020, by = 2))
 ```
 
 
@@ -133,12 +146,15 @@ gathered %>%
   ggtitle("Injuries per Season by Type") +
   xlab("Year") +
   ylab("Injuries per Season (log scale)") +
-  scale_y_log10()
+  scale_y_log10() +
+  scale_x_continuous(breaks = seq(2008, 2020, by = 2))
 ```
 
 ### ...as barplots
 
 ```{r}
+gathered$broad_injury <- as.factor(gathered$broad_injury)
+
 gathered %>%
   ggplot(aes(x = year, y = broad_count, fill = broad_injury)) +
   geom_bar(stat = "identity") + 
@@ -146,8 +162,10 @@ gathered %>%
   xlab("Year") +
   ylab("Number of Injuries") +
   labs(fill = "Injury Type") +
-  scale_color_hue(labels = c("Arm", "Foot", "Hand", "Head", "Leg", "Lower Torso", 
-                                "Shoulder", "Upper Torso"))
+  scale_fill_discrete(labels=c("Arm", "Foot", "Hand", "Head", "Leg", "Lower Torso", 
+                               "Shoulder", "Upper Torso")) + 
+  scale_x_continuous(breaks = seq(2008, 2020, by = 2)) +
+  theme_economist()
 
 gathered %>%
   ggplot(aes(x = year, y = broad_count, fill = broad_injury)) +
@@ -156,8 +174,10 @@ gathered %>%
   xlab("Year") +
   ylab("Number of Injuries") +
   labs(fill = "Injury Type") +
-  scale_color_hue(labels = c("Arm", "Foot", "Hand", "Head", "Leg", "Lower Torso", 
-                                "Shoulder", "Upper Torso"))
+  scale_fill_discrete(labels=c("Arm", "Foot", "Hand", "Head", "Leg", "Lower Torso", 
+                               "Shoulder", "Upper Torso")) + 
+  scale_x_continuous(breaks = seq(2008, 2020, by = 2)) +
+  theme_economist()
 ```
 
 ## Check Number of Players in Dataset
@@ -169,8 +189,8 @@ injuries %>%
   ggplot(aes(x = year, y = players)) +
   geom_line() +
   ylim(0, 1600) +
-  ggtitle("Number of Players in Dataset Each Season")
-
+  ggtitle("Number of Players in Dataset Each Season") +
+  theme_economist()
 ```
 
 ## Games missed/played injured per season
@@ -185,9 +205,11 @@ games_missed %>%
   ggplot(aes(x = year, y = avg_games_missed)) +
   geom_line() +
   ylim(0, 7) +
-  ggtitle("Games Missed Due to Injury") +
+  ggtitle("Average Number of Games Missed Among Injured Players") +
   xlab("Season") +
-  ylab("Games Missed")
+  ylab("Average # of Games Missed") +
+  scale_x_continuous(breaks = seq(2008, 2020, by = 2)) +
+  theme_economist()
 
 
 ### games injured
@@ -199,21 +221,23 @@ games_injured %>%
   ggplot(aes(x = year, y = avg_games_injured)) +
   geom_line() +
   ylim(0, 7) +
-  ggtitle("Games Injured") +
+  ggtitle("Average Number of Games Injured Among Injured Players") +
   xlab("Season") +
-  ylab("Games Injured")
+  ylab("Avg. # Games Injured") +
+  scale_x_continuous(breaks = seq(2008, 2020, by = 2)) +
+  theme_economist()
 ```
 
 
-## Can we use Poisson regression to predict # of injuries?
+## Can we use Poisson regression to predict # of injuries that a player will get in a season?
 
 ```{r, fig.height = 2, fig.width=12}
 injuries %>%
-  ggplot(aes(x = all_injuries)) + 
+  ggplot(aes(x = total_injuries)) + 
   geom_histogram(binwidth = 1, col = "black", fill = "skyblue")
 
 injuries %>%
-  ggplot(aes(x = all_injuries)) + 
+  ggplot(aes(x = total_injuries)) + 
   geom_histogram(binwidth = 1, col = "black", fill = "skyblue") +
   facet_grid(. ~ year)
 ```
@@ -222,7 +246,8 @@ injuries %>%
 ### Try fitting Poisson model
 
 ```{r}
-poisson_fit <- glm(all_injuries ~ as.factor(year), family = poisson, data = time_series)
+poisson_fit <- glm(total_injuries ~ year, family = poisson, data = time_series)
 summary(poisson_fit)
 ```
 
+**tried to explore this, but it won't work because we don't have a true count of people who had zero injuries**

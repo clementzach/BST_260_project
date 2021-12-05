@@ -5,35 +5,30 @@ output:
     df_print: paged
 ---
 
+
 ```{r}
 library(dplyr)
 library(stringr)
 library(tidytext)
 library(gsubfn)
 library(ggplot2)
+library(ggthemes)
 ```
 
 
-
-Which injuries are most common in the NFL?
-  We will present summary statistics and graphs demonstrating injury frequency Will include specific injuries along with injuries categorized by body part (knee, head, shoulder, etc.)
+Question: Which injuries are most common in the NFL?
   
-  Breakdown of injury composition by position
-  
-Create a Shiny app showing summary data
-  Show a bar chart with the count and type of injuries
-  Inputs: age range, team, position
+To explore this question, we will present summary statistics and graphs demonstrating injury frequency Will include specific injuries along with injuries categorized by body part (knee, head, shoulder, etc.)
 
 
 Read in the data set
 ```{r}
-injuries <- read.csv("C:/Users/wduff/OneDrive/School/Harvard/Fall2021/BST260/BST_260_project/Data/injuries_only.csv")
+injuries <- read.csv("C:/Users/wduff/OneDrive/School/Harvard/Fall2021/BST260/BST_260_project/Data/all_injuries_clean.csv")
 ```
 
 ```{r}
 head(injuries)
 dim(injuries)
-injuries
 ```
 
 
@@ -154,7 +149,7 @@ Foot:
 
 
 
-Total injuries for each injury, categorized by body part
+Total injuries for each injury, categorized by specific body part
 ```{r}
 # Head
 concussion <- sum(str_detect(injuries$injury_types, pattern = "concussion"))
@@ -358,9 +353,6 @@ There are a total of 4942 foot injuries with ankle injuries being the most frequ
 
 
 
-
-
-
 Creating a new data frame including injury types, counts and body part
 ```{r}
 injurytype <- c("concussion", "head", "neck", "eye", 'ear', 'chin', 'migraine', 'jaw', 'nose', 'tooth', "stinger", "faciallaceration", "eyelid", "facial", "mouth", "nose", "throat", "seizure",
@@ -406,14 +398,22 @@ injury_count %>%
   ggplot(aes(y=injurytype, x=count)) +
   geom_col()+
   scale_y_reordered() +
+  geom_text(aes(label = count), position = position_dodge(width = 0.9), vjust = .4, hjust = -.1, fontface = 'bold') +
   xlab("Count") +
   ylab("Injury Type") + 
-  ggtitle("Distribution of Specific Injury Types")
+  ggtitle("Distribution of Specific Injury Types") +
+  theme_economist() +
+  theme(
+    axis.title.x = element_text(size = 14, vjust = -3),
+    axis.title.y = element_text(size = 14, vjust = 3),
+    title = element_text(size = 18),
+    plot.title = element_text(hjust = 0.5, vjust = 2.5)
+  )
 
 ```
 
 
-We see that injuries towards the bottom are not that frequent. Let's group the injuries together based on where they are in the body and look at a more general distriubtion instead.
+We see that injuries towards the bottom are not that frequent. Let's group the injuries together based on where they are in the body and look at a more general distribution instead. (See Willow_Lauren.EDA)
 
 
                                                                 

@@ -22,8 +22,9 @@ require(boot)
 
 ```{r}
 # Load data
-injuries = read.csv("Data/all_injuries_clean.csv")
-players = read.csv("Data/all_player_demographic_clean.csv")
+print(getwd())
+injuries = read.csv("../../Data/all_injuries_clean.csv")
+players = read.csv("../../Data/all_player_demographic_clean.csv")
 
 # Merge data
 injuries_expanded = left_join(injuries, players, by = c("name", "team", "year", "full_team"))
@@ -48,6 +49,11 @@ injuries_by_team = injuries_by_team_year %>%
 
 # Step 3: Join data from Step 1 and Step 2 
 injuries_by_team_year_with_summary = left_join(injuries_by_team_year, injuries_by_team, by = "full_team")
+
+# Step 4: Save datasets for ease of use
+# save(injuries_by_team, file ="Data/data_for_plots/Q3/injuries_by_team.Rdata")
+# save(injuries_by_team_year_with_summary, file ="Data/data_for_plots/Q3/injuries_by_team_with_year_summary.Rdata")
+
 
 # Plot 1
 p1 = ggplot(data = injuries_by_team, aes(x = total_injuries, y = reorder(full_team, total_injuries))) +

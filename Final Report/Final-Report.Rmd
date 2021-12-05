@@ -98,7 +98,7 @@ library(vcd)
 library(MASS)
 library(dplyr)
 
-injured = read.csv("Data/all_injuries_clean.csv")
+injured = read.csv("../Data/all_injuries_clean.csv")
 
 fix_nfl_names <- function(x){ #https://rdrr.io/github/papagorgio23/bettoR/src/R/fix_nfl_names.R
   x[grep("Arizona Cardinals", x, ignore.case=TRUE)] <- "ARI"
@@ -147,7 +147,7 @@ injured = injured %>%
   filter(total_injuries != 0)
 
 # Load players data
-players_dat = read.csv("Data/all_player_demographic_clean.csv")
+players_dat = read.csv("../Data/all_player_demographic_clean.csv")
 
 # Clean players data
 players = players_dat %>% 
@@ -280,7 +280,7 @@ library(stringr)
 library(tidytext)
 library(gsubfn)
 
-injuries <- read.csv("Data/all_injuries_clean.csv")
+injuries <- read.csv("../Data/all_injuries_clean.csv")
 injuries <- injuries %>% mutate(injury_types = tolower(injury_types))
 
 concussion <- sum(str_detect(injuries$injury_types, pattern = "concussion"))
@@ -448,32 +448,9 @@ library(lubridate)
 ```
 
 ```{r, echo=FALSE, message = FALSE}
-injuries = read.csv("Data/all_injuries_clean.csv")
-players = read.csv("Data/all_player_demographic_clean.csv")
-
-# Merge data
-injuries_expanded = left_join(injuries, players, by = c("name", "team", "year", "full_team"))
-
-# Step 1: Generate Injuries by Team-Year Summary Data
-injuries_by_team_year = injuries_expanded %>% 
-  filter(year < 2021) %>% 
-  mutate(injury_count = rowSums(dplyr::select(.,head:foot))) %>% 
-  group_by(year, full_team) %>% 
-  summarize(all_injuries = sum(injury_count)) %>% 
-  group_by(full_team) %>% 
-  mutate(cumsum_all_injuries = cumsum(all_injuries))
-
-# Step 2: Generate Injuries by Team Summary Data
-injuries_by_team = injuries_by_team_year %>% 
-  group_by(full_team) %>% 
-  summarize(
-    total_injuries = sum(all_injuries),
-    median_injuries = median(all_injuries),
-    max_injuries = max(all_injuries),
-  )
-
-# Step 3: Join data from Step 1 and Step 2 
-injuries_by_team_year_with_summary = left_join(injuries_by_team_year, injuries_by_team, by = "full_team")
+# Load Data
+load("../Data/data_for_plots/injuries_by_team.Rdata")
+load("../Data/data_for_plots/injuries_by_team_with_year_summary.Rdata")
 ```
 
 We first consider the total injuries per year over the entire 2009-2021 period, as well as the max injuries that a team had in a single season over this period. 

@@ -140,12 +140,6 @@ players = players_dat %>%
          age = age(ymd(birthdate)), bmi = (weight_pounds / height_inches^2)*703) %>% 
   mutate(age = age - (2021 - year))
 
-# filter(year == 2018) %>% 
-#             mutate(injury = as.factor(ifelse(is.na(injury_types), 0, 1)), # make binary injury variable
-#                    position_id = as.factor(position_id), # make position categorical
-#                    bmi = weight_pounds / height_inches^2, # make BMI variable
-#                    age = age(ymd(birthdate)) - 3) %>% # subtract 3 years to match age in 2018
-#             filter(position_id != "")
 ```
 
 &nbsp;

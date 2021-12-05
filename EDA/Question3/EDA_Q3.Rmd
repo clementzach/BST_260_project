@@ -22,7 +22,6 @@ require(boot)
 
 ```{r}
 # Load data
-print(getwd())
 injuries = read.csv("../../Data/all_injuries_clean.csv")
 players = read.csv("../../Data/all_player_demographic_clean.csv")
 

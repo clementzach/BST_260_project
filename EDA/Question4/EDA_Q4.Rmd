@@ -180,18 +180,6 @@ gathered %>%
   theme_economist()
 ```
 
-## Check Number of Players in Dataset
-
-```{r}
-injuries %>%
-  group_by(year) %>%
-  summarize(players = n()) %>%
-  ggplot(aes(x = year, y = players)) +
-  geom_line() +
-  ylim(0, 1600) +
-  ggtitle("Number of Players in Dataset Each Season") +
-  theme_economist()
-```
 
 ## Games missed/played injured per season
 

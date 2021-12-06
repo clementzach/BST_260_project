@@ -17,11 +17,10 @@ library(tidyr)
 library(ggthemes)
 
 
-setwd("C:/Users/wduff/OneDrive/School/Harvard/Fall2021/BST260/BST_260_project")
 
 # Read in the data 
-injury <- read.csv("Data/all_injuries_clean.csv")
-players <-  read.csv("Data/all_player_demographic_clean.csv")
+injury <- read.csv("../../Data/all_injuries_clean.csv")
+players <-  read.csv("../../Data/all_player_demographic_clean.csv")
 
 # Merge data
 injuries <- left_join(injury, players, by = c("name", "team", "year", "full_team"))
@@ -67,19 +66,18 @@ ui <- fluidPage(
             sidebarPanel(
                 
                 # Explanatory text
-                column(6, p("First, we can look at the distribution of injuries based on broad position")
-                ),
+                p("First, we can look at the distribution of injuries based on broad position")
+                ,
                 
                 #Radio buttons that allow the user to select one
-                column(6, radioButtons("position", label = "Select Category of Players:",
+                radioButtons("position", label = "Select Category of Players:",
                              choices = c("All Players", "Offensive", "Defensive"))
-                )
+                
             ),
             
             mainPanel(
                 # Plot
-                column(12, plotOutput("poshist")
-                )
+                plotOutput("poshist")
             )
         )
     ),
@@ -96,22 +94,19 @@ ui <- fluidPage(
             sidebarPanel(
                 
                 # Explanatory text
-                column(6, p("Now, let's look just at the distribution of injuries for the specific offensive positions")
-                ),
+                p("Now, let's look just at the distribution of injuries for the specific offensive positions")
+                ,
                 
                 
                 # Drop down menu for only offensive positions
-                column(6, selectInput(inputId = "off", label = "Choose an Offensive Position",
+                selectInput(inputId = "off", label = "Choose an Offensive Position",
                             choices = c(Lineman = "OL", QuarterBack = "QB", RunningBack = "RB", TightEnd = "TE", 
                                         WideReciever = "WR", Kicker = "K", Punter = "P"))
-                )
-                
             ),
             
             mainPanel(
                 # Plot
-                column(12, plotOutput("offhist") 
-                )
+                plotOutput("offhist") 
             )
         )
     )

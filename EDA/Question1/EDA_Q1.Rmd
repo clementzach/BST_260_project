@@ -274,7 +274,7 @@ apply(players %>%
         dplyr::select(injury, position_id, height_inches, weight_pounds, game_starter, age, bmi, year), 
       2, function(x) sum(is.na(x))) %>% pander
 
-# remove the 13 people with missing height/weight
+# remove the 13 people with missing height/weight (much less than 5% of each column)
 players <- players %>%
   drop_na(height_inches)
 ```
@@ -319,6 +319,7 @@ players %>% ggplot(aes(injury, age)) +
 
 
 **The absence of any significant difference between groups suggests that `bmi` will not be a significiant predictor in our Logistic model. However, the boxplots for `age` suggest the opposite, mainly that `age` may be a sigificant predictor.**
+
 
 &nbsp;
 
@@ -409,7 +410,7 @@ pander(summary(logi_fit2))
 
 &nbsp;
 
-### Let's try Quadratic Age, too
+### Let's try Quadratic Age, too (may not be a linear relationship with injuries)
 ```{r}
 players = players %>% mutate(age_sq = age^2)
 
@@ -418,6 +419,7 @@ pander(summary(logi_fit3))
 
 ```
 
+**age squared is significant**
 
 &nbsp;
 
@@ -460,14 +462,14 @@ logi_step_fit <- logi_fit_all %>%
 summary(logi_step_fit)
 ```
 
-**AIC forward selection gives us game_starter (yes/no), position, weight, and age as covariates.** 
+**AIC forward selection gives us game_starter (yes/no), position, weight, age, and age squared as covariates.** 
 
 
 #### Now we have our covariates--fit model with training data
 
 ```{r, logistic regression}
 logi_fit = glm(data = train_set, family = binomial(),
-               injury ~ position_id + weight_pounds + game_starter + age + year)
+               injury ~ position_id + weight_pounds + game_starter + age + I(age^2) + year)
 
 p_hat_logit = predict(logi_fit, newdata = test_set, type = "response") # get predicted probabilities
 
@@ -508,7 +510,7 @@ set.seed(1)
 control <- trainControl(method = 'cv', number = 2, p = .5) # cut-off of 0.5
 
 players2 <- mutate(players, label = injury) %>%
-  dplyr::select(label, position_id, weight_pounds, game_starter, age, year)
+  dplyr::select(label, position_id, weight_pounds, game_starter, age)
 
 res <- train(label ~ .,
              data = players2,
@@ -523,7 +525,7 @@ plot(res)
 ```
 
 ```{r kNN}
-knn_fit = knn3(data = train_set, injury ~ position_id + age + game_starter + 
+knn_fit = knn3(data = train_set, injury ~ position_id + age + I(age^2) + game_starter + 
                  weight_pounds + year, 
                k = 71) # fit kNN using optimal
 
@@ -534,10 +536,11 @@ y_hat_knn = as.factor(ifelse(f_hat_knn > 0.5, 1, 0))
 confusionMatrix(data = y_hat_knn, 
                 reference = test_set$injury, positive = "1") # generate confusion matrix
 
-# plot with 2 dimensions, color = injured vs. not injured to see "neighbors"
+# plots with 2 dimensions, color = injured vs. not injured to see "neighbors"
 players %>%
   ggplot(aes(x = age, y = weight_pounds, color = injury)) +
   geom_point() +
+  ggtitle("Visualizing Injured vs. Non-Injured Characteristics") +
   xlab("Age") +
   ylab("Weight (lbs)") +
   scale_color_discrete(name = "Injury")
@@ -545,6 +548,7 @@ players %>%
 players %>%
   ggplot(aes(x = weight_pounds, y = game_starter, color = injury)) +
   geom_point() +
+  ggtitle("Visualizing Injured vs. Non-Injured Characteristics") +
   xlab("Weight (lbs)") +
   ylab("Game Starter (Yes/No)") +
   scale_color_discrete(name = "Injury")
@@ -552,6 +556,7 @@ players %>%
 players %>%
   ggplot(aes(x = weight_pounds, y = position_id, color = injury)) +
   geom_point() +
+  ggtitle("Visualizing Injured vs. Non-Injured Characteristics") +
   xlab("Weight (lbs)") +
   ylab("Position") +
   scale_color_discrete(name = "Injury")
@@ -562,7 +567,7 @@ players %>%
 ### Random Forest
 
 ```{r Random Forest}
-rf_fit = randomForest(injury ~ position_id + age + game_starter + weight_pounds + year,
+rf_fit = randomForest(injury ~ position_id + age + I(age^2) + game_starter + weight_pounds + year,
                       data = train_set) # fit random forest using training set
 
 rf_fit
@@ -590,9 +595,9 @@ roc_rf = roc(test_set[["injury"]], p_hat_rf)
 ggroc(list("Logistic Regression" = roc_logi, "kNN, k = 71" = roc_knn, "Random Forest" = roc_rf)) +
   theme(legend.title = element_blank()) +
   geom_segment(aes(x = 1, xend = 0, y = 0, yend = 1), color = "black", linetype = "dashed") +
-  xlab("Sensitivity") +
-  ylab("Specificity") 
-
+  ggtitle("ROC Curves") +
+  xlab("Specificity") +
+  ylab("Sensitivity") 
 ```
 
 
@@ -602,6 +607,35 @@ auc(roc_knn)
 auc(roc_rf)
 ```
 
-**logistic regression and random forest are competing for best model**
+### So which model is the best?
+
+Accuracy:  
+- logistic regression: 0.638
+- kNN: 0.583
+- random forest: 0.636
+
+Logistic regression has the highest accuracy.
+
+AUC:  
+- logistic regression: 0.701
+- kNN: 0.607
+- random forest: 0.691
+
+Logistic regression has the highest AUC.
+
+It's clear that kNN is the poorest performing model, so we'll consider logistic regression and random forest.
+
+logistic regression:  
+sensitivity: 0.675          
+specificity: 0.600   
+
+random forest:  
+Sensitivity: 0.632         
+Specificity: 0.640
+
+The random forest is slightly more balanced in terms of sensitivity/specificity.
+
+Logistic regression has the highest accuracy and the highest AUC of all 3 model. It also provides us with clearly interpretable odds ratios for the risk of injury. For these reasons, we'll choose logistic regression as the best model.
+
 
 &nbsp;

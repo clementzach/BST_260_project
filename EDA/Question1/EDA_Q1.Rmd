@@ -26,7 +26,7 @@ library(splitstackshape)
 library(tidyverse)
 options(digits = 3)
 theme_update(plot.title = element_text(hjust = 0.5))
-theme_update(theme_economist())
+theme_set(theme_economist())
 ```
 
 ```{r}
@@ -162,8 +162,8 @@ players = players_dat %>%
 
 ### Load data from .csv files saved to EDA Question1 folder
 ```{r}
-injuries = read.csv("../../EDA/Question1/injury_dat.q1.csv")
-players = read.csv("../../EDA/Question1/players_dat.q1.csv")
+injuries = read.csv("../../EDA/Q1/injury_dat.q1.csv")
+players = read.csv("../../EDA/Q1/players_dat.q1.csv")
 ```
 
 &nbsp;

@@ -17,21 +17,32 @@ library(tidyr)
 library(ggthemes)
 
 
-library(readr)
-injuries <- read_csv("cleaneddata.csv")
+setwd("C:/Users/wduff/OneDrive/School/Harvard/Fall2021/BST260/BST_260_project")
 
-injury_gather <- gather(injuries, key = "bodypart", value = "counts", 28:ncol(injuries))
+# Read in the data 
+injury <- read.csv("Data/all_injuries_clean.csv")
+players <-  read.csv("Data/all_player_demographic_clean.csv")
+
+# Merge data
+injuries <- left_join(injury, players, by = c("name", "team", "year", "full_team"))
+
+# Gather data
+injury_gather <- gather(injuries, key = "bodypart", value = "counts", 11:18)
 injury_gather
 
+
+# Select only offensive positions
 offensive_position <- c("K", "OL", "P", "QB", "RB", "TE", "WR")
 
+# Create groups for Offense and Defense
 offense <- injury_gather %>% filter(position_id %in% offensive_position)
 defense <- injury_gather %>% filter(position_id == "DEF") 
 
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(
-
+    
+    # Darly theme
     theme = shinythemes::shinytheme("darkly"),
     
     # Application title
@@ -39,7 +50,7 @@ ui <- fluidPage(
     
     br(), # add some space
 
-    
+    # Text explaining app
     p("This Shiny app uses a dataset related 
         to NFL injuries to examine the distribution 
         of different injury types among NFL football players."),
@@ -115,11 +126,11 @@ server <- function(input, output) {
         if (input$position == "All Players") {
             injury_gather %>%
                 group_by(bodypart) %>%
-                summarise(counts = sum(counts)) %>%
-                ggplot(aes(x = reorder(bodypart, - counts), y = counts)) +
+                summarise(counts = sum(counts)) %>% # Plotting counts
+                ggplot(aes(x = reorder(bodypart, - counts), y = counts)) +  # Put in descending order
                 geom_col() +
                 geom_text(aes(label = counts), position= position_dodge(width = 0.9), vjust = -0.25, fontface = 'bold') +
-                scale_y_continuous(limits = c(0, 10000)) +
+                scale_y_continuous(limits = c(0, 10000)) +  #Fixed axis
                 xlab("Body Part") +
                 ylab("Count") +
                 ggtitle("Distribution of Injuries for All Injured NFL players") +
@@ -127,11 +138,13 @@ server <- function(input, output) {
                 theme(
                     axis.title.x = element_text(size = 16, vjust = -3),
                     axis.title.y = element_text(size = 16, vjust = 3),
-                    title = element_text(size = 20),
+                    title = element_text(size = 18),
                     plot.title = element_text(hjust = 0.5)
                 )
             
         } else if(input$position == "Offensive" | input$position == "Defensive") {
+            
+            # Change Strings: Offensive to Offense and Defensive to Defense
             lower <- str_to_lower(input$position)
             temp <- str_sub(lower, 1, nchar(lower) - 3)
             e <- "e"
@@ -145,28 +158,28 @@ server <- function(input, output) {
                 scale_y_continuous(limits = c(0, 10000)) +
                 xlab("Body Part") +
                 ylab("Count") +
-                ggtitle(paste("Distribution of Injuries for Injured ", input$position, " NFL players")) + 
+                ggtitle(paste("Distribution of Injuries for Injured", input$position, " NFL players")) + 
                 theme_economist() +
                 theme(
                     axis.title.x = element_text(size = 14, vjust = -3),
                     axis.title.y = element_text(size = 14, vjust = 3),
-                    title = element_text(size = 18),
+                    title = element_text(size = 16),
                     plot.title = element_text(hjust = 0.5)
                 )
             
         }
     })
     
-    
+    # Second Histogram for only specific Offensive Positions
     output$offhist <- renderPlot({
         
         offense %>% 
-            filter(position_id == input$off) %>%
+            filter(position_id == input$off) %>%    # Filter by user selection
             group_by(bodypart) %>%
             summarise(counts = sum(counts)) %>%
             ggplot(aes(x = reorder(bodypart, -counts), y = counts)) +
             geom_col() +
-            geom_text(aes(label = counts), position=position_dodge(width = 0.9), vjust = -0.25, fontface='bold') +
+            geom_text(aes(label = counts), position = position_dodge(width = 0.9), vjust = -0.25, fontface='bold') +
             scale_y_continuous(limits = c(0, 1500)) +
             xlab("Body Part") +
             ylab("Count") +
@@ -189,7 +202,3 @@ server <- function(input, output) {
 # Run the application 
 shinyApp(ui = ui, server = server)
 
-
-#Still need to fix axis & title label to include input$age
-#Change theme
-#Include text explaining what the app does

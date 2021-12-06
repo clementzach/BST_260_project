@@ -17,7 +17,13 @@ library(ggthemes)
 
 Read in the data set
 ```{r}
-injuries <- read.csv("all_injuries_clean.csv")
+setwd("C:/Users/wduff/OneDrive/School/Harvard/Fall2021/BST260/BST_260_project")
+
+injury <- read.csv("Data/all_injuries_clean.csv")
+players = read.csv("Data/all_player_demographic_clean.csv")
+
+# Merge data
+injuries = left_join(injury, players, by = c("name", "team", "year", "full_team"))
 ```
 
 ```{r}
@@ -25,106 +31,14 @@ head(injuries)
 dim(injuries)
 ```
 
-```{r}
-# Change the injuries to be all lower case
-injuries <- injuries %>% mutate(injury_types = tolower(injury_types))
-```
 
 ```{r}
-# Replace any "/" with " " ?
-injuries$injury_types <- gsub("/", " ", injuries$injury_types)
+injuries[11:18]
 ```
-
-
-Create the body part vectors
-```{r}
-Head <- c("concussion", "head", "neck", "eye", "ear", "chin", "migranes", "migrane", "jaw", "nose", "tooth", "stinger", "faciallaceration", "eyelid", "facial", "mouth", "nose", "throat", "seizure")
-
-Shoulder <- c("shoulder", "clavicle", "collarbone", "leftshoulder", "rightshoulder", "jointshoulder", "scapula", "sternoclavicular")
-
-UpperTorso <- c("rib", "back", "pectoral", "pec", "chest", "oblique", "lumbar", "core", "spine", "trapezius", "kidney", "lung", "heart", "abdomen", "abdominal", "solarplexus", "spleen", "hernia", "arrhythmia", "liver", "stomach", "appendix")
-
-LowerTorso <- c("glute", "buttocks", "hip", "righthip", "pelvis", "tailbone")
-
-
-Arm <- c("arm", "rightupperarm", "forearm", "bicep", "biceps", "elbow", "rightelbow", "tricep", "triceps")
-
-Hand <- c("hand", "righthand", "thumb", "rightthumb", "finger", "rightfinger", "wrist", "rightwrist")
-
-Leg <- c("hamstring", "righthamstring", "knee", "rightknee", "acl", "mcl", "meniscus", "bothknees", "thigh", "rightthigh", "calf", "rightcalf", "quadricep", "rightquadricep", "quad", "groin", "rightgroin", "lowerleg", "tibia", "fibula", "shin", "rightshin", "adductor", "contusion")
-
-Foot <- c("foot", "rightfoot", "ankle", "achilles", "toe", "toes", "heel")
-```
-
-
-Function to count broad body part injuries 
-```{r}
-# Bodypart input must be a string
-broad <- function(bodylist, bodypart) {
-  
-  pasted <- paste(bodylist, collapse = "|")
-  broad_injury <- gsub(pasted, bodypart, injuries$injury_types)
-  str_count(broad_injury, pattern = bodypart)
-
-  }
-```
-
-
-
-Calculating broad injury counts
-```{r}
-# Head
-head_counts <- broad(Head, "head")
-
-# Shoulder
-shoulder_counts <- broad(Shoulder, "shoulder")
-
-# Upper Torso
-uppertorso_counts <- broad(UpperTorso, "uppertorso")
-
-# Lower Torso
-lowertorso_counts <- broad(LowerTorso, "lowertorso")
-
-# Arm
-arm_counts <- broad(Arm, "arm")
-
-# Hand
-hand_counts <- broad(Hand, "hand")
-
-# Leg
-leg_counts <- broad(Leg, "leg")
-
-# Foot
-foot_counts <- broad(Foot, "foot")
-```
-
-
-Adding body part columns to the orginal injury data frame
-```{r}
-injuries <- injuries %>% 
-  mutate(head = head_counts) %>%
-  mutate(shoulder = shoulder_counts) %>%
-  mutate(upper_torso = uppertorso_counts) %>%
-  mutate(lower_torso = lowertorso_counts) %>%
-  mutate(arm = arm_counts) %>%
-  mutate(hand = hand_counts) %>%
-  mutate(leg = leg_counts) %>%
-  mutate(foot = foot_counts)
-  
-
-head(injuries)
-```
-
-
-Save the cleaned data frame
-```{r}
-#write.csv(injuries,"cleaneddata.csv", row.names = TRUE)
-```
-
 
 Gathering into long format
 ```{r}
-injury_gather <- gather(injuries, key = "bodypart", value = "counts", 28:ncol(injuries))
+injury_gather <- gather(injuries, key = "bodypart", value = "counts", 11:18)
 injury_gather
 ```
 
@@ -137,7 +51,7 @@ injury_gather %>%
   summarise(counts = sum(counts)) %>%
   ggplot(aes(x = reorder(bodypart, -counts), y = counts)) +
   geom_col() + 
-  geom_text(aes(label = counts), position= position_dodge(width = 0.9), vjust = -0.25, fontface = 'bold') +
+  geom_text(aes(label = counts), position = position_dodge(width = 0.9), vjust = -0.25, fontface = 'bold') +
   xlab("Body Part") +
   ylab("Count") +
   ggtitle("Distriubtion of Injuries by Body Part") +
@@ -191,7 +105,7 @@ offense %>%
   summarise(counts = sum(counts)) %>%
   ggplot(aes(x = reorder(bodypart, -counts), y = counts)) +
   geom_col() +
-  geom_text(aes(label = counts), position= position_dodge(width = 0.9), vjust = -0.25, fontface = 'bold') +
+  geom_text(aes(label = counts), position = position_dodge(width = 0.9), vjust = -0.25, fontface = 'bold') +
   xlab("Body Part") +
   ylab("Count") +
   ggtitle("Distriubtion of Offensive Injuries") +
@@ -212,7 +126,7 @@ defense %>%
   summarise(counts = sum(counts)) %>%
   ggplot(aes(x = reorder(bodypart, -counts), y = counts)) +
   geom_col() +
-  geom_text(aes(label = counts), position= position_dodge(width = 0.9), vjust = -0.25, fontface = 'bold') +
+  geom_text(aes(label = counts), position = position_dodge(width = 0.9), vjust = -0.25, fontface = 'bold') +
   xlab("Body Part") +
   ylab("Count") +
   ggtitle("Distriubtion of Defensive Injuries") +

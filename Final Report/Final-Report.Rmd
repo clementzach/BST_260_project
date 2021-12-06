@@ -274,11 +274,12 @@ players %>% ggplot(aes(age, fill = injury)) +
 
 We are also interested in understanding which injuries are most common in the NFL; we begin by simply charting the distribution of injuries, using the very granular injury type classifications available from our data source. 
 
-```{r, echo=FALSE, message = FALSE}
+```{r, echo=FALSE, message = FALSE, fig.width = 10}
 library(dplyr)
 library(stringr)
 library(tidytext)
 library(gsubfn)
+
 
 injuries <- read.csv("../Data/all_injuries_clean.csv")
 injuries <- injuries %>% mutate(injury_types = tolower(injury_types))
@@ -423,19 +424,28 @@ injury_count <- data.frame(injurytype, count, bodypart)
 # injury_count %>% arrange(desc(count))
 ```
 
-```{r, echo=FALSE, message=FALSE}
+```{r, echo=FALSE, message=FALSE, fig.width=10, fig.height=10}
 injury_count %>%
   mutate(injurytype = reorder_within(injurytype,count, bodypart)) %>%
   ggplot(aes(y=injurytype, x=count)) +
   geom_col()+
   scale_y_reordered() +
+  geom_text(aes(label = count), position = position_dodge(width = 0.9), vjust = .4, hjust = -.1, fontface = 'bold') +
   xlab("Count") +
   ylab("Injury Type") + 
-  ggtitle("Distribution of Specific Injury Types")
+  ggtitle("Distribution of Specific Injury Types") +
+  theme_economist() +
+  theme(
+    axis.title.x = element_text(size = 14, vjust = -3),
+    axis.title.y = element_text(size = 14, vjust = 3),
+    title = element_text(size = 18),
+    plot.title = element_text(hjust = 0.5, vjust = 2.5)
+  )
+
 
 ```
 
-[TODO: add summary and add less granular grouping chart]
+We see here that looking at each specific injury does give us information, but after about the first half of the injury list, the graph is not very impactful. We do conclude however from this graph that knee, ankle and hamstring injuries were the most common injury in NFL football players. After this initial EDA, injuries were group into more general body part injuries as head, shoulder, upper torso, lower torso, arm, hand, leg and foot. This way we were able to analyze the distribution of general injuries more clearly and come to a meaningful conclusion. This can be seen in the RShiny app provided in the EDA files and on the website. 
 
 ##### Question 3: Which teams have the most injuries, and are these teams consistently the same ones year over year?
 

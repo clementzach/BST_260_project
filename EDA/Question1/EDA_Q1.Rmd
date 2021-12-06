@@ -28,11 +28,11 @@ options(digits = 3)
 theme_update(plot.title = element_text(hjust = 0.5))
 ```
 
-```{r, include=F}
+```{r, include=F, eval=F}
 injured = read.csv("../../Data/all_injuries_clean.csv") # load data
 ```
 
-```{r, include=F}
+```{r, include=F, eval=F}
 fix_nfl_names <- function(x){ #https://rdrr.io/github/papagorgio23/bettoR/src/R/fix_nfl_names.R
   x[grep("Arizona Cardinals", x, ignore.case=TRUE)] <- "ARI"
   
@@ -111,7 +111,7 @@ age <- function(dob, age.day = today(), units = "years", floor = TRUE) {
 &nbsp;
 
 
-```{r, include=F}
+```{r, include=F, eval= F}
 ### Select columns
 injured = injured %>% 
   mutate(short_team_name = fix_nfl_names(full_team), injury = rep(1, nrow(injured))) %>%
@@ -123,7 +123,7 @@ injured = injured %>%
 &nbsp;
 
 
-```{r, include=F}
+```{r, include=F, eval=F}
 ### Load demographic data
 
 players_dat = read.csv("../../Data/all_player_demographic_clean.csv")
@@ -137,7 +137,7 @@ players = players_dat %>%
 
 &nbsp;
 
-```{r, include=F}
+```{r, include=F, eval=F}
 ### Merge with injury data
 
 injuries = injured %>% left_join(players, by = c("name", "full_team", "short_team_name", "year", "team")) %>%
@@ -158,7 +158,7 @@ write.csv(players, "../../Data/data_for_plots/Q1/players_dat_q1.csv", row.names 
 
 &nbsp;
 
-### Load data from .csv files saved to EDA Question1 folder
+### Load data from .csv files saved in Data folder
 ```{r}
 injuries = read.csv("../../Data/data_for_plots/Q1/injury_dat_q1.csv", stringsAsFactors = T) %>% 
   mutate(injury = factor(injury))
@@ -248,9 +248,10 @@ exp_injuries_byYear %>%
   ggplot(aes(x = year, y = avg_total_injuries, color = position_id)) +
   geom_line() +
   ggtitle("Average Number of Injuries per Season among Injured Players") +
-  ylim(1, 2.3) +
-  xlab("Year") +
+  ylim(0.7, 2.3) +
+  xlab("Season") +
   ylab("Average Total Injuries") +
+  scale_x_continuous(breaks = seq(2008, 2020, by = 2)) +
   scale_color_discrete(name = "Position", labels = c("Defense", "Kicker", "Offensive Line", "Punter", 
                                                      "Quarterback", "Running Back", "Tight End", "Wide Receiver")) 
 ```

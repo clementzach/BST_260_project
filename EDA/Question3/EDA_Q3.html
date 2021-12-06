@@ -175,7 +175,7 @@ pre code {
 <pre class="r"><code>library(tidyverse)</code></pre>
 <pre><code>## ── Attaching packages ─────────────────────────────────────── tidyverse 1.3.1 ──</code></pre>
 <pre><code>## ✓ ggplot2 3.3.5     ✓ purrr   0.3.4
-## ✓ tibble  3.1.4     ✓ dplyr   1.0.7
+## ✓ tibble  3.1.6     ✓ dplyr   1.0.7
 ## ✓ tidyr   1.1.3     ✓ stringr 1.4.0
 ## ✓ readr   2.0.1     ✓ forcats 0.5.1</code></pre>
 <pre><code>## ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
@@ -208,8 +208,8 @@ library(vcd)</code></pre>
 <pre class="r"><code>require(boot)</code></pre>
 <pre><code>## Loading required package: boot</code></pre>
 <pre class="r"><code># Load data
-injuries = read.csv(&quot;Data/all_injuries_clean.csv&quot;)
-players = read.csv(&quot;Data/all_player_demographic_clean.csv&quot;)
+injuries = read.csv(&quot;../../Data/all_injuries_clean.csv&quot;)
+players = read.csv(&quot;../../Data/all_player_demographic_clean.csv&quot;)
 
 # Merge data
 injuries_expanded = left_join(injuries, players, by = c(&quot;name&quot;, &quot;team&quot;, &quot;year&quot;, &quot;full_team&quot;))
@@ -234,6 +234,11 @@ injuries_by_team = injuries_by_team_year %&gt;%
 
 # Step 3: Join data from Step 1 and Step 2 
 injuries_by_team_year_with_summary = left_join(injuries_by_team_year, injuries_by_team, by = &quot;full_team&quot;)
+
+# Step 4: Save datasets for ease of use
+# save(injuries_by_team, file =&quot;Data/data_for_plots/Q3/injuries_by_team.Rdata&quot;)
+# save(injuries_by_team_year_with_summary, file =&quot;Data/data_for_plots/Q3/injuries_by_team_with_year_summary.Rdata&quot;)
+
 
 # Plot 1
 p1 = ggplot(data = injuries_by_team, aes(x = total_injuries, y = reorder(full_team, total_injuries))) +

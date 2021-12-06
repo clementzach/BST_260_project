@@ -11,38 +11,29 @@ knitr::opts_chunk$set(echo = TRUE, message = F)
 
 
 ```{r, include=F}
-library(AER)
 library(caret)
 library(e1071)
-library(eeptools)
-library(foreign)
 library(gam)
-library(ggrepel)
 library(ggthemes)
-library(gridExtra)
 library(lubridate)
 library(magrittr)
-library(nnet)
 library(pander)
 library(pROC)
 library(pscl)
 library(randomForest)
 library(rpart)
-library(splines)
-library(splines2)
 library(splitstackshape)
 library(tidyverse)
-library(VGAM)
-library(vcd)
+theme_set(theme_economist())
 options(digits = 3)
 theme_update(plot.title = element_text(hjust = 0.5))
 ```
 
-```{r}
-injured = read.csv("../../Data/all_injuries_clean.csv") # load data
+```{r, include=F, eval=F}
+#injured = read.csv("../../Data/all_injuries_clean.csv") # load data
 ```
 
-```{r, include=F}
+```{r, include=F, eval=F}
 fix_nfl_names <- function(x){ #https://rdrr.io/github/papagorgio23/bettoR/src/R/fix_nfl_names.R
   x[grep("Arizona Cardinals", x, ignore.case=TRUE)] <- "ARI"
   
@@ -120,8 +111,9 @@ age <- function(dob, age.day = today(), units = "years", floor = TRUE) {
 
 &nbsp;
 
+
+```{r, include=F, eval=F}
 ### Select columns
-```{r}
 injured = injured %>% 
   mutate(short_team_name = fix_nfl_names(full_team), injury = rep(1, nrow(injured))) %>%
   mutate(total_injuries = dplyr::select(injured, head, shoulder, upper_torso, lower_torso, arm, hand, leg, foot) %>% rowSums) %>% 
@@ -131,36 +123,47 @@ injured = injured %>%
 
 &nbsp;
 
-### Load demographic data
-```{r}
-players_dat = read.csv("../../Data/all_player_demographic_clean.csv")
 
-players = players_dat %>% 
-  mutate(short_team_name = fix_nfl_names(full_team), 
-         age = age(ymd(birthdate)), bmi = (weight_pounds / height_inches^2)*703) %>% 
+```{r, include=F, eval=F}
+### Load demographic data
+
+#players_dat = read.csv("../../Data/all_player_demographic_clean.csv")
+
+players = players_dat %>%
+  mutate(short_team_name = fix_nfl_names(full_team),
+         age = age(ymd(birthdate)), bmi = (weight_pounds / height_inches^2)*703) %>%
   mutate(age = age - (2021 - year))
 
-# filter(year == 2018) %>% 
-#             mutate(injury = as.factor(ifelse(is.na(injury_types), 0, 1)), # make binary injury variable
-#                    position_id = as.factor(position_id), # make position categorical
-#                    bmi = weight_pounds / height_inches^2, # make BMI variable
-#                    age = age(ymd(birthdate)) - 3) %>% # subtract 3 years to match age in 2018
-#             filter(position_id != "")
 ```
 
 &nbsp;
 
+```{r, include=F, eval=F}
 ### Merge with injury data
+
+# injuries = injured %>% left_join(players, by = c("name", "full_team", "short_team_name", "year", "team")) %>%
+#   filter(position_id != "") %>% 
+#   mutate(injury = factor(injury), position_id = factor(position_id)) %>% 
+#   filter(age < 50)
+# 
+# players = players %>% left_join(injured, by = c("name", "full_team", "short_team_name", "year", "team")) %>% 
+#   mutate(injury = factor(ifelse(is.na(injury), 0, 1))) %>%
+#   filter(position_id != "") %>% 
+#   mutate(injury = factor(injury), position_id = factor(position_id)) %>% 
+#   filter(age < 50)
+
+
+#write.csv(injuries, "injury_dat_q1.csv", row.names = F)
+#write.csv(players, "players_dat_q1.csv", row.names = F)
+
+```
+
+&nbsp;
+
+### Load data from .csv files saved to EDA Question1 folder
 ```{r}
-injuries = injured %>% left_join(players, by = c("name", "full_team", "short_team_name", "year", "team")) %>%
-  filter(position_id != "") %>% 
-  mutate(injury = factor(injury), position_id = factor(position_id))
-
-players = players %>% left_join(injured, by = c("name", "full_team", "short_team_name", "year", "team")) %>% 
-  mutate(injury = factor(ifelse(is.na(injury), 0, 1))) %>%
-  filter(position_id != "") %>% 
-  mutate(injury = factor(injury), position_id = factor(position_id))
-
+injuries = read.csv("injury_dat_q1.csv", stringsAsFactors = T) %>% mutate(injury = factor(injury))
+players = read.csv("players_dat_q1.csv", stringsAsFactors = T) %>% mutate(injury = factor(injury))
 ```
 
 &nbsp;
@@ -185,7 +188,10 @@ number_injury %>% group_by(position_id) %>%
 ```                                                   
 
 
-```{r}             
+
+```{r, include=F, eval=F}       
+## Deprecated plot over time
+
 number_injury %>% ggplot(aes(year, n, color = position_id)) +
                     geom_line() +
                     xlab("Year") +
@@ -196,33 +202,62 @@ number_injury %>% ggplot(aes(year, n, color = position_id)) +
 
 &nbsp;
 
-### Maybe a $\log_{10}$ transform could help
-```{r}             
+
+```{r, include=F, eval=F}       
+# Deprecated log transform of plot over time
+
 number_injury %>% ggplot(aes(year, n, color = position_id)) +
                     geom_line() +
                     xlab("Year") +
-                    ylab("# of Players Injured (log_10 scale)") +
+                    ylab(bquote("# of Players Injured ("*log_10* "scale)")) +
                     scale_color_discrete(name = "Position") +
                     ggtitle("Number of Players Injured (log_10 scale) by Position (2009 - Present)") +
                     scale_y_log10()
 ```
 
-**if we use this graph, we should adjust for # of players per position**
 
-&nbsp;
-
-### What about injuries per year? Is this uniformly distributed?
+### avg. # of injuries per position per season
 ```{r}
-injuries %>% ggplot(aes(year)) + 
-              geom_bar() + 
-              ylab("# of Players Injured") +
-              ggtitle("# of Players Injured per Year")
+# (meaning if I am a wide receiver, how many injuries (by type) can I expect to get this season?)
+
+# total injuries per player per year
+exp_injuries <- players %>% 
+  filter(!is.na(total_injuries)) %>% # remove players with no injury (NA's)
+  group_by(position_id) %>% 
+  summarise(avg_total_injuries = sum(total_injuries)/n(),
+            SD = sd(total_injuries), 
+            Q1 = quantile(total_injuries, probs = 0.25),
+            Median = median(total_injuries),
+            Q3 = quantile(total_injuries, probs = 0.75),
+            Min = min(total_injuries),
+            Max = max(total_injuries)
+  )
+
+exp_injuries %>% pander
+
+
+# code for plot
+exp_injuries_byYear <- players %>% 
+  filter(!is.na(total_injuries)) %>% # remove players with no injury (NA's)
+  group_by(position_id, year) %>% 
+  summarise(avg_total_injuries = sum(total_injuries)/n())# trying to divide by number of players to get avg. for each player
+
+exp_injuries_byYear %>%
+  ggplot(aes(x = year, y = avg_total_injuries, color = position_id)) +
+  geom_line() +
+  ylim(1, 2.4) +
+  xlab("Year") +
+  ylab("Average Total Injuries") +
+  scale_color_discrete(name = "Position")
+
+# can also do this for each injury type!!
+
 ```
 
 &nbsp;
 
+
 ### We now will switch to our second analysis (Machine Learning)
-* For the next analyses, we will only look at the **2018** season
 * We will perform logistic regression, kNN, and random forest using the binary outcome `injury`. 
 * We will then compare the results of the different methods based on accuracy, sensitivity/specificity, and ROC/AUC.
 * Logical potential predictors: position_id, height_inches, weight_pounds, game_starter, age, bmi
@@ -231,9 +266,6 @@ injuries %>% ggplot(aes(year)) +
 
 ### Our first step is to check for missing data in our predictors and outcome
 ```{r}
-#players = players %>% 
-#  filter(year == 2018)
-
 apply(players %>% 
         dplyr::select(injury, position_id, height_inches, weight_pounds, game_starter, age, bmi, year), 
       2, function(x) sum(is.na(x))) %>% pander
@@ -243,49 +275,54 @@ players <- players %>%
   drop_na(height_inches)
 ```
 
-&nbsp;
 
-**Fortunately, our covariates of interest do not have any missing values during the 2018 season. Several other variables including NFL_draft_round could be interesting, but these columns have a lot of Missing Not at Random data.**
+```{r, include=F, eval=F}
+### What is the distribution of injuries by position?
 
-&nbsp;
-
-### What is the distribution of injuries by position in 2018?
-
-```{r}
-players$position_id = 
+players$position_id =
   fct_relevel(players$position_id, c("DEF", "OL", "WR", "RB", "TE", "QB", "K", "P"))
 
-players %>% 
+players %>%
   ggplot(aes(position_id, fill = injury)) +
     geom_bar(position = "dodge") +
     xlab("Position") +
     ylab("# of Injured Players") +
     ggtitle("Injured Players by Position in 2018") +
     scale_fill_manual(name = "Injury", guide = guide_legend(reverse=TRUE), values = c("#619CFF", "#F8766D"))
-  
+
 ```
 
-&nbsp;
 
-**The graph above is very useful for determining whether a logistic regression coefficient would likely be statistically significant. We are looking to see, for a given position, if there is a large discrepancy between the number of injured and non-injured players. If the number of players injured is much larger than the number of non-injured players, then we would expect that the odds of getting injured in this position is large. We would expect the opposite to be the case for a position where the number of non-injured players is much greater than the number of injured players.**
-
-&nbsp;
 
 ### What is the distribution of BMI for the injured vs non-injured players?
 ```{r}
 players %>% ggplot(aes(injury, bmi)) +
-              geom_boxplot()
+              geom_boxplot() +
+              xlab("Injury Status") +
+              ylab("BMI") +
+              ggtitle("BMI for Injured/Non-Injured Players")
 ```
 
 &nbsp;
 
-**The absence of any significant difference between groups suggests that `bmi` will not be a significiant predictor in our Logistic model.**
+```{r}
+players %>% ggplot(aes(injury, age)) +
+              geom_boxplot() +
+              xlab("Injury Status") +
+              ylab("Age") +
+              ggtitle("Age of Injured/Non-Injured Players")
+```
+
+
+**The absence of any significant difference between groups suggests that `bmi` will not be a significiant predictor in our Logistic model. However, the boxplots for `age` suggest the opposite, mainly that `age` may be a sigificant predictor.**
 
 &nbsp;
 
+
+```{r, eval=F, include=F}
 ### What is the distribution of `injury` by `age` in 2018?
-```{r}
-injuries %>% filter(year == 2018) %>% 
+
+injuries %>% filter(year == 2018) %>%
              ggplot(aes(age)) +
                geom_histogram(binwidth = 0.5) +
                xlab("Age") +
@@ -296,28 +333,32 @@ injuries %>% filter(year == 2018) %>%
 
 &nbsp;
 
+
+```{r, include=F, eval=F}
 ## Try side by side bars for `age`
-```{r}
+
 players %>% ggplot(aes(age, fill = injury)) +
               geom_histogram(binwidth = 0.5, position = "dodge") +
               xlab("Age") +
               ylab("# of Players Injured") +
               ggtitle("# of Injured Players by Age in 2018") +
               scale_x_continuous(breaks = seq(0, 50, 1)) +
-              scale_fill_manual(name = "Injury", 
+              scale_fill_manual(name = "Injury",
                                 guide = guide_legend(reverse=TRUE), values = c("#619CFF", "#F8766D"))
-  
+
 ```
 
 &nbsp;
 
+
+```{r, include=F, eval=F}
 ## Try scaling by number of players in each age group
-```{r}
+
 age_group_size = players %>% group_by(age) %>% count() # get size of each age group
 
 injured_age_group_size = players %>% # get size of age group for injured players only
-                          filter(injury == 1) %>% 
-                          group_by(age) %>% 
+                          filter(injury == 1) %>%
+                          group_by(age) %>%
                           count()
 
 # Some age groups have no injuries, so the vector lengths differ
@@ -332,9 +373,9 @@ injured_age_group_size %>% ggplot(aes(age, scaled_n)) +
                              ylab("Percentage") +
                              ggtitle("Percentage of Players Injured by Age Group") +
                              scale_x_continuous(breaks = seq(0, 50, 1)) +
-                             scale_fill_manual(name = "Injury", 
+                             scale_fill_manual(name = "Injury",
                                guide = guide_legend(reverse=TRUE), values = c("#619CFF", "#F8766D"))
-  
+
 ```
 
 &nbsp;
@@ -410,7 +451,7 @@ summary(logi_fit_all)
 # forward selection
 logi_step_fit <- logi_fit_all %>% 
   step(direction = "forward", data = players, 
-       scope = (~ as.factor(position_id) + height_inches + weight_pounds + as.factor(game_starter) + 
+       scope = (~ position_id + height_inches + weight_pounds + game_starter + 
                   age + I(age^2) + bmi + year))
 summary(logi_step_fit)
 ```
@@ -422,7 +463,7 @@ summary(logi_step_fit)
 
 ```{r, logistic regression}
 logi_fit = glm(data = train_set, family = binomial(),
-               injury ~ as.factor(position_id) + weight_pounds + as.factor(game_starter) + age + year)
+               injury ~ position_id + weight_pounds + game_starter + age + year)
 
 p_hat_logit = predict(logi_fit, newdata = test_set, type = "response") # get predicted probabilities
 
@@ -444,26 +485,41 @@ confusionMatrix(data = y_hat_logit,
 
 #### Use 2-fold cross-validation to find optimal `k` (achieves the highest accuracy for 0.5 cut-off)
 ```{r, eval=F}
-set.seed(1)
-control <- trainControl(method = 'cv', number = 2, p = .5) # cut-off of 0.5
+#### Heather's code ####
 
-players2 <- mutate(players, label = injury) %>%
-  dplyr::select(label, position_id, age, game_starter, weight_pounds, year)
-
+# control <- trainControl(method='cv', number=2, p=.5)
+# dat2 <- mutate(dat, label=as.factor(label)) %>%
+#   select(label,X_1,X_2)
 # res <- train(label ~ .,
-#              data = players2,
+#              data = dat2,
 #              method = "knn",
 #              trControl = control,
 #              tuneLength = 1, # How fine a mesh to go on grid
-#              tuneGrid = data.frame(k = seq(3, 151, 2)),
-#              metric = "Accuracy")
-# 
-# res$bestTune # best choice of 'k' is k = 71
+#              tuneGrid=data.frame(k=seq(3,151,2)),
+#              metric="Accuracy")
 # plot(res)
+
+set.seed(1)
+
+control <- trainControl(method = 'cv', number = 2, p = .5) # cut-off of 0.5
+
+players2 <- mutate(players, label = injury) %>%
+  dplyr::select(label, position_id, weight_pounds, game_starter, age, year)
+
+res <- train(label ~ .,
+             data = players2,
+             method = "knn",
+             trControl = control,
+             tuneLength = 1, # How fine a mesh to go on grid
+             tuneGrid = data.frame(k = seq(3, 151, 2)),
+             metric = "Accuracy")
+
+res$bestTune # best choice of 'k'
+plot(res)
 ```
 
-```{r kNN, eval=F}
-knn_fit = knn3(data = train_set, injury ~ as.factor(position_id) + age + as.factor(game_starter) + 
+```{r kNN}
+knn_fit = knn3(data = train_set, injury ~ position_id + age + game_starter + 
                  weight_pounds + year, 
                k = 71) # fit kNN using optimal
 
@@ -477,22 +533,31 @@ confusionMatrix(data = y_hat_knn,
 # plot with 2 dimensions, color = injured vs. not injured to see "neighbors"
 players %>%
   ggplot(aes(x = age, y = weight_pounds, color = injury)) +
-  geom_point()
+  geom_point() +
+  xlab("Age") +
+  ylab("Weight (lbs)") +
+  scale_color_discrete(name = "Injury")
 
 players %>%
   ggplot(aes(x = weight_pounds, y = game_starter, color = injury)) +
-  geom_point()
+  geom_point() +
+  xlab("Weight (lbs)") +
+  ylab("Game Starter (Yes/No)") +
+  scale_color_discrete(name = "Injury")
 
 players %>%
   ggplot(aes(x = weight_pounds, y = position_id, color = injury)) +
-  geom_point()
+  geom_point() +
+  xlab("Weight (lbs)") +
+  ylab("Position") +
+  scale_color_discrete(name = "Injury")
 ```
 
 &nbsp;
 
 ### Random Forest
 
-```{r Random Forest, eval=F}
+```{r Random Forest}
 rf_fit = randomForest(injury ~ position_id + age + game_starter + weight_pounds + year,
                       data = train_set) # fit random forest using training set
 
@@ -513,7 +578,7 @@ confusionMatrix(data = y_hat_rf,
 
 ### Plot ROCs
 
-```{r, message=FALSE, eval=F}
+```{r, message=FALSE}
 roc_logi = roc(test_set[["injury"]], p_hat_logit) # ROC curve creation
 roc_knn = roc(test_set[["injury"]], f_hat_knn)
 roc_rf = roc(test_set[["injury"]], p_hat_rf)
@@ -527,7 +592,7 @@ ggroc(list("Logistic Regression" = roc_logi, "kNN, k = 71" = roc_knn, "Random Fo
 ```
 
 
-```{r, eval=F}
+```{r}
 auc(roc_logi) # calculate AUC for each ROC curve
 auc(roc_knn)
 auc(roc_rf)

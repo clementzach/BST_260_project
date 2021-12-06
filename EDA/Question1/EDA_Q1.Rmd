@@ -9,7 +9,6 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE, message = F)
 ```
 
-
 ```{r, include=F}
 library(caret)
 library(e1071)
@@ -29,11 +28,11 @@ options(digits = 3)
 theme_update(plot.title = element_text(hjust = 0.5))
 ```
 
-```{r, include=F, eval=F}
-#injured = read.csv("../../Data/all_injuries_clean.csv") # load data
+```{r, include=F}
+injured = read.csv("../../Data/all_injuries_clean.csv") # load data
 ```
 
-```{r, include=F, eval=F}
+```{r, include=F}
 fix_nfl_names <- function(x){ #https://rdrr.io/github/papagorgio23/bettoR/src/R/fix_nfl_names.R
   x[grep("Arizona Cardinals", x, ignore.case=TRUE)] <- "ARI"
   
@@ -112,7 +111,7 @@ age <- function(dob, age.day = today(), units = "years", floor = TRUE) {
 &nbsp;
 
 
-```{r, include=F, eval=F}
+```{r, include=F}
 ### Select columns
 injured = injured %>% 
   mutate(short_team_name = fix_nfl_names(full_team), injury = rep(1, nrow(injured))) %>%
@@ -124,10 +123,10 @@ injured = injured %>%
 &nbsp;
 
 
-```{r, include=F, eval=F}
+```{r, include=F}
 ### Load demographic data
 
-#players_dat = read.csv("../../Data/all_player_demographic_clean.csv")
+players_dat = read.csv("../../Data/all_player_demographic_clean.csv")
 
 players = players_dat %>%
   mutate(short_team_name = fix_nfl_names(full_team),
@@ -138,32 +137,33 @@ players = players_dat %>%
 
 &nbsp;
 
-```{r, include=F, eval=F}
+```{r, include=F}
 ### Merge with injury data
 
-# injuries = injured %>% left_join(players, by = c("name", "full_team", "short_team_name", "year", "team")) %>%
-#   filter(position_id != "") %>% 
-#   mutate(injury = factor(injury), position_id = factor(position_id)) %>% 
-#   filter(age < 50)
-# 
-# players = players %>% left_join(injured, by = c("name", "full_team", "short_team_name", "year", "team")) %>% 
-#   mutate(injury = factor(ifelse(is.na(injury), 0, 1))) %>%
-#   filter(position_id != "") %>% 
-#   mutate(injury = factor(injury), position_id = factor(position_id)) %>% 
-#   filter(age < 50)
+injuries = injured %>% left_join(players, by = c("name", "full_team", "short_team_name", "year", "team")) %>%
+  filter(position_id != "") %>%
+  mutate(injury = factor(injury), position_id = factor(position_id)) %>%
+  filter(age < 50)
+
+players = players %>% left_join(injured, by = c("name", "full_team", "short_team_name", "year", "team")) %>%
+  mutate(injury = factor(ifelse(is.na(injury), 0, 1))) %>%
+  filter(position_id != "") %>%
+  mutate(injury = factor(injury), position_id = factor(position_id)) %>%
+  filter(age < 50)
 
 
-#write.csv(injuries, "injury_dat_q1.csv", row.names = F)
-#write.csv(players, "players_dat_q1.csv", row.names = F)
-
+write.csv(injuries, "../../Data/data_for_plots/Q1/injury_dat_q1.csv", row.names = F)
+write.csv(players, "../../Data/data_for_plots/Q1/players_dat_q1.csv", row.names = F)
 ```
 
 &nbsp;
 
 ### Load data from .csv files saved to EDA Question1 folder
 ```{r}
-injuries = read.csv("injury_dat_q1.csv", stringsAsFactors = T) %>% mutate(injury = factor(injury))
-players = read.csv("players_dat_q1.csv", stringsAsFactors = T) %>% mutate(injury = factor(injury))
+injuries = read.csv("../../Data/data_for_plots/Q1/injury_dat_q1.csv", stringsAsFactors = T) %>% 
+  mutate(injury = factor(injury))
+
+players = read.csv("../../Data/data_for_plots/Q1/players_dat_q1.csv", stringsAsFactors = T) %>% mutate(injury = factor(injury))
 ```
 
 &nbsp;
@@ -173,6 +173,7 @@ players = read.csv("players_dat_q1.csv", stringsAsFactors = T) %>% mutate(injury
 ### Q1: Which positions are most at-risk for injuries? The table below contains descriptive statistics calculated for each position over multiple seasons (2009 - Present). 
 
 ```{r}
+# set up table
 number_injury = injuries %>% 
   group_by(position_id, year) %>% 
   count()
@@ -187,6 +188,7 @@ number_injury %>% group_by(position_id) %>%
   pander
 ```                                                   
 
+This table does not account for the number of people who play each position. Let's make a new table that may be more useful.
 
 
 ```{r, include=F, eval=F}       
@@ -216,9 +218,9 @@ number_injury %>% ggplot(aes(year, n, color = position_id)) +
 ```
 
 
-### avg. # of injuries per position per season
+### avg. # of injuries per position per season, among people who get injured
 ```{r}
-# (meaning if I am a wide receiver, how many injuries (by type) can I expect to get this season?)
+# (meaning if I am a wide receiver, how many injuries can I expect to get this season?)
 
 # total injuries per player per year
 exp_injuries <- players %>% 
@@ -236,23 +238,24 @@ exp_injuries <- players %>%
 exp_injuries %>% pander
 
 
-# code for plot
+# code for plot over time
 exp_injuries_byYear <- players %>% 
   filter(!is.na(total_injuries)) %>% # remove players with no injury (NA's)
   group_by(position_id, year) %>% 
   summarise(avg_total_injuries = sum(total_injuries)/n())# trying to divide by number of players to get avg. for each player
-
+# plot
 exp_injuries_byYear %>%
   ggplot(aes(x = year, y = avg_total_injuries, color = position_id)) +
   geom_line() +
-  ylim(1, 2.4) +
+  ggtitle("Average Number of Injuries per Season among Injured Players") +
+  ylim(1, 2.3) +
   xlab("Year") +
   ylab("Average Total Injuries") +
-  scale_color_discrete(name = "Position")
-
-# can also do this for each injury type!!
-
+  scale_color_discrete(name = "Position", labels = c("Defense", "Kicker", "Offensive Line", "Punter", 
+                                                     "Quarterback", "Running Back", "Tight End", "Wide Receiver")) 
 ```
+
+Note: we can't include people who were not injured in this calculation, because we have a complete dataset of injured players, but we do not have a complete dataset of non-injured players.
 
 &nbsp;
 

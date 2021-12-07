@@ -368,6 +368,9 @@ injury_count <- generate_dataset(injuries)
 ```
 
 ```{r, echo=FALSE, message=FALSE, fig.width=10, fig.height=10}
+library(ggplot2)
+library(ggthemes)
+
 injury_count %>%
   mutate(injurytype = reorder_within(injurytype,count, bodypart)) %>%
   ggplot(aes(y=injurytype, x=count)) +

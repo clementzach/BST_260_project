@@ -260,6 +260,23 @@ Note: we can't include people who were not injured in this calculation, because 
 
 &nbsp;
 
+```{r}
+players %>% group_by(position_id, year) %>% 
+  summarise(total = sum(total_injuries, na.rm = T)) %>% 
+  ggplot(aes(year, total, color = position_id)) +
+  geom_line() +
+  xlab("Year") +
+  ylab("Total Injuries (log scale)") +
+  scale_color_discrete(name = "Position") +
+  scale_y_log10() +
+  ggtitle("Total Injuries by Position (2009 - Present)") +
+  scale_x_continuous(breaks = seq(2008, 2020, by = 2)) +
+  scale_color_discrete(name = "Position", labels = c("Defense", "Kicker", "Offensive Line", "Punter", 
+                                                     "Quarterback", "Running Back", "Tight End", "Wide Receiver")) 
+  
+```
+
+
 
 ### We now will switch to our second analysis (Machine Learning)
 * We will perform logistic regression, kNN, and random forest using the binary outcome `injury`. 
@@ -491,43 +508,32 @@ confusionMatrix(data = y_hat_logit,
 
 #### Use 2-fold cross-validation to find optimal `k` (achieves the highest accuracy for 0.5 cut-off)
 ```{r, eval=F}
-#### Heather's code ####
-
-# control <- trainControl(method='cv', number=2, p=.5)
-# dat2 <- mutate(dat, label=as.factor(label)) %>%
-#   select(label,X_1,X_2)
-# res <- train(label ~ .,
-#              data = dat2,
-#              method = "knn",
-#              trControl = control,
-#              tuneLength = 1, # How fine a mesh to go on grid
-#              tuneGrid=data.frame(k=seq(3,151,2)),
-#              metric="Accuracy")
-# plot(res)
-
+# find optimal k
 set.seed(1)
 
 control <- trainControl(method = 'cv', number = 2, p = .5) # cut-off of 0.5
 
 players2 <- mutate(players, label = injury) %>%
-  dplyr::select(label, position_id, weight_pounds, game_starter, age)
+  dplyr::select(label, position_id, weight_pounds, game_starter, age, year)
 
 res <- train(label ~ .,
              data = players2,
              method = "knn",
              trControl = control,
              tuneLength = 1, # How fine a mesh to go on grid
-             tuneGrid = data.frame(k = seq(3, 151, 2)),
+             tuneGrid = data.frame(k = seq(3, 71, 2)),
              metric = "Accuracy")
 
 res$bestTune # best choice of 'k'
 plot(res)
 ```
 
+optimal k = 21 -- accuracy generally plateaus after this point
+
 ```{r kNN}
 knn_fit = knn3(data = train_set, injury ~ position_id + age + I(age^2) + game_starter + 
                  weight_pounds + year, 
-               k = 71) # fit kNN using optimal
+               k = 21) # fit kNN using optimal
 
 f_hat_knn = predict(knn_fit, newdata = test_set)[ , 2] # get probability for injury
 
@@ -611,7 +617,7 @@ auc(roc_rf)
 
 Accuracy:  
 - logistic regression: 0.638
-- kNN: 0.583
+- kNN: 0.58
 - random forest: 0.636
 
 Logistic regression has the highest accuracy.

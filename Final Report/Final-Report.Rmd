@@ -463,7 +463,226 @@ From the final chart it appears that the Texans' large number of injuries seem t
 
 ##### Question 4: How has injury incidence evolved over time in the NFL?
 
-Willow Include: Initial EDA with no cleanup, new EDA with cleanup (for all players), EDA based on Offense or Defense, EDA based on age, EDA based on year
+**Willow Include: Initial EDA with no cleanup, new EDA with cleanup (for all players), EDA based on Offense or Defense, EDA based on age, EDA based on year**
+
+Here, we will explore trends over time in NFL injuries.
+
+First, we will create simple plot with the number of injures recorded each season.
+
+```{r}
+injuries <- read.csv("../Data/data_for_plots/Q4/injuries_Q4.csv")
+
+# create summarized table
+time_series <- injuries %>%
+  group_by(year) %>%
+  summarize(total_injuries = sum(total_injuries))
+
+# plot
+time_series %>%
+  ggplot(aes(x = year, y = total_injuries)) +
+  geom_line() +
+  ggtitle("Injuries per Season") +
+  xlab("Season") +
+  ylab("Total Number of Injuries") +
+  ylim(0, 2800) +
+  scale_x_continuous(breaks = seq(2008, 2020, by = 2)) +
+  theme_economist()
+```
+
+It looks like there have been fewer injuries in recent years, but we can explore this data much further.
+
+We can also look at the typical number of injuries players get in a season:
+
+```{r}
+injuries %>%
+  ggplot(aes(x = as.factor(year), y = total_injuries)) +
+  geom_boxplot() +
+  ggtitle("Distribution of Number of Injuries per Player") +
+  xlab("Season") +
+  ylab("Injuries per Season per Player") +
+  theme_economist()
+```
+It is important to note that this data only includes players who were injured at least once, but it is helpful in understanding the typical distribution of the number of injuries per person. Among injured players, the median number of injuries per players was just one injury each season, but a few unlucky players experienced more than 10 injuries in a single season.
+
+We can also break down these plots by teams, similarly to how we explored this in question 3:
+
+```{r}
+# create summarized table
+time_series_teams <- injuries %>%
+  group_by(year, team) %>%
+  summarize(total_injuries = sum(total_injuries))
+
+# plot
+time_series_teams %>%
+  ggplot(aes(x = year, y = total_injuries, color = team)) +
+  geom_line() +
+  ggtitle("Injuries per Season by Team") +
+  xlab("Season") +
+  ylab("Total Number of Injuries per Team") +
+  ylim(0, 175) +
+  #labs(color = "Team") +
+  scale_x_continuous(breaks = seq(2008, 2020, by = 2)) +
+  theme(legend.position = "none")
+```
+
+The decreasing trend in injury counts appears to hold true for all teams.
+
+Concussions in the NFL have received significant attention in the last several years due to concerns regarding CTE and permanent brain damage. The NFL has worked to reduce the frequency of concussions among its players. Has there been a decline in the number of concussions each season since 2009?
+
+```{r}
+# create summarized tables
+concussions <- injuries %>%
+  group_by(year) %>%
+  summarize(head = sum(head))
+
+# plot
+concussions %>%
+  ggplot(aes(x = year, y = head)) +
+  geom_line() +
+  ggtitle("Concussions per Season") +
+  xlab("Season") +
+  ylab("Total Number of Concussion") +
+  ylim(0, 300) +
+  scale_x_continuous(breaks = seq(2008, 2020, by = 2)) +
+  theme_economist()
+```
+
+While there is significant variation over time in this plot, it appears that there is a downward trend over time in the number of concussions each season.
+
+Does this trend hold true across all teams?
+
+```{r}
+concussions_team <- injuries %>%
+  group_by(year, team) %>%
+  summarize(head = sum(head))
+
+
+concussions_team %>%
+  ggplot(aes(x = year, y = head, color = team)) +
+  geom_line() +
+  ggtitle("Concussions per Season by Team") +
+  xlab("Season") +
+  ylab("Total Number of Concussions per Team") +
+  ylim(0, 20) +
+  theme(legend.position = "none") +
+  scale_x_continuous(breaks = seq(2008, 2020, by = 2))
+```
+
+We see huge variation in this plot, both between teams and from year to year, with somewhere between 0 and 20 players experiencing concussions per team per season. However, we still see what appears to be a general decline in concussions over time.
+
+Now that we have explored concussions more closely, let's look at trends for all injury types.
+
+```{r}
+# gather into long format
+gathered <- injuries %>%
+  gather(key = broad_injury, value = broad_count, c("head", "shoulder", "upper_torso", "lower_torso", 
+                                           "arm", "hand", "leg", "foot"))
+# create summary table
+gathered <- gathered %>%
+  group_by(year, broad_injury) %>%
+  summarise(broad_count = sum(broad_count))
+
+# plot
+gathered %>%
+  ggplot(aes(x = year, y = broad_count, color = broad_injury, group = broad_injury)) +
+  geom_line() +
+  ggtitle("Injuries per Season by Type") +
+  xlab("Season") +
+  ylab("Injuries per Season (log scale)") +
+  scale_y_log10() +
+  scale_x_continuous(breaks = seq(2008, 2020, by = 2)) +
+  labs(color = "Injury Type") +
+  scale_color_discrete(labels = c("Arm", "Foot", "Hand", "Head",
+                                  "Leg", "Lower Torso", "Shoulder", "Upper Torso"))
+```
+
+Interestingly, we see similar trends across all eight injury types. Note that the y-axis is displayed on the log scale to improve readability by spreading out the lower lines on this plot.
+
+We can visualize this information in a barplot as well, which is even easier to interpret:
+
+```{r}
+gathered$broad_injury <- as.factor(gathered$broad_injury)
+
+gathered %>%
+  ggplot(aes(x = year, y = broad_count, fill = broad_injury)) +
+  geom_bar(stat = "identity", color = "white") + 
+  ggtitle("Injury Type by Year") +
+  xlab("Season") +
+  ylab("Number of Injuries") +
+  labs(fill = "Injury Type") +
+  scale_fill_discrete(labels=c("Arm", "Foot", "Hand", "Head", "Leg", "Lower Torso", 
+                               "Shoulder", "Upper Torso")) + 
+  scale_x_continuous(breaks = seq(2008, 2020, by = 2)) +
+  theme_economist() +
+  theme(legend.position = "right")
+```
+
+The stacked barplot allows us to see the cumulative trends in injuries over time, as well as the breakdown by injury type.
+
+While all of the previous plots show the same trend in injury counts over time, none of them provide any insight into the severity of each injury. Lastly, we want to explore the average number of games missed due to injury per player per season, as well as the average number of games injured per player per season, which includes players who play through injuries. These plots are shown below:
+
+```{r}
+### games missed
+games_missed <- injuries %>%
+  group_by(year) %>%
+  summarize(avg_games_missed = mean(num_games_missing))
+
+games_missed %>%
+  ggplot(aes(x = year, y = avg_games_missed)) +
+  geom_line() +
+  ylim(0, 7) +
+  ggtitle("Average Number of Games Missed among Injured Players") +
+  xlab("Season") +
+  ylab("Average # of Games Missed") +
+  scale_x_continuous(breaks = seq(2008, 2020, by = 2)) +
+  theme_economist()
+
+
+### games injured
+games_injured <- injuries %>%
+  group_by(year) %>%
+  summarize(avg_games_injured = mean(num_games_injured))
+
+games_injured %>%
+  ggplot(aes(x = year, y = avg_games_injured)) +
+  geom_line() +
+  ylim(0, 7) +
+  ggtitle("Average Number of Games Injured among Injured Players") +
+  xlab("Season") +
+  ylab("Avg. # of Games Injured") +
+  scale_x_continuous(breaks = seq(2008, 2020, by = 2)) +
+  theme_economist()
+```
+
+The plots actually show entirely different trends, highlighting the importance of exploring any data set extensively before drawing conclusongs about the data. In the first plot, we see the there a spike in the number of games missed due to injury from 2016-2018, which corresponds with a sharp drop in raw injury counts in the other plots. It is possible that in these years players had fewer injuries than in prior years, but these injuries were more severe, leading to more games missed per injury. It is also possible that new rules force injured players to sit out of games even when they want to play through their injuries. The second plot depicts a more consistent trend in games played while injured with a steep drop-off in 2019. It is interesting to note that the trends in these two plots match reasonably well from 2016 to 2020, with the number of games injured only slightly higher than the number of games missed due to injury. Before 2016, it appears that there were many more games played while injured, because the number of games injured is much higher than the number of games missed. This may be due to changes in NFL rules that prevent injured players from injuring themselves further by continuing to play.
+
+## Can we use Poisson regression to predict # of injuries that a player will get in a season?
+
+```{r, fig.height = 2, fig.width=12}
+injuries %>%
+  ggplot(aes(x = total_injuries)) + 
+  geom_histogram(binwidth = 1, col = "black", fill = "skyblue")
+
+injuries %>%
+  ggplot(aes(x = total_injuries)) + 
+  geom_histogram(binwidth = 1, col = "black", fill = "skyblue") +
+  facet_grid(. ~ year)
+```
+
+
+### Try fitting Poisson model to predict injury count for each person
+
+```{r}
+mean(injuries$total_injuries)
+var(injuries$total_injuries)
+# we actually have under-dispersion
+
+poisson_fit <- glm(total_injuries ~ year, family = poisson, data = injuries)
+summary(poisson_fit)
+```
+
+**tried to explore this, but it won't work because we don't have a true count of people who had zero injuries**
+
 
 ### VI) Final Analysis: What did you learn about the data? How did you answer the questions? How can you justify your answers? Note that 1 type of analysis per team member is required. A Shiny app counts as a type of analysis.
 [TODO: We need to decide what qualifies as "exploratory analysis" and what qualifies as "final analysis" for each question.]

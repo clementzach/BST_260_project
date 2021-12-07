@@ -23,7 +23,7 @@ To explore this question, we will present summary statistics and graphs demonstr
 
 Read in the data set
 ```{r}
-injuries <- read.csv("C:/Users/wduff/OneDrive/School/Harvard/Fall2021/BST260/BST_260_project/Data/all_injuries_clean.csv")
+injuries <- read.csv("../../Data/all_injuries_clean.csv")
 ```
 
 ```{r}

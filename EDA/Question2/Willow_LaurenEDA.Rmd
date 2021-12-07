@@ -15,12 +15,12 @@ library(tidyr)
 library(ggthemes)
 ```
 
+
 Read in the data set
 ```{r}
-setwd("C:/Users/wduff/OneDrive/School/Harvard/Fall2021/BST260/BST_260_project")
 
-injury <- read.csv("Data/all_injuries_clean.csv")
-players = read.csv("Data/all_player_demographic_clean.csv")
+injury <- read.csv("../../Data/all_injuries_clean.csv")
+players <- read.csv("../../Data/all_player_demographic_clean.csv")
 
 # Merge data
 injuries = left_join(injury, players, by = c("name", "team", "year", "full_team"))

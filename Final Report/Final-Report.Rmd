@@ -119,7 +119,7 @@ number_injury %>% group_by(position_id) %>%
   pander
 ```                                                   
 
-We could interpret the mean value for defensive players (DEF) by stating that about 512 DEF players are injured per season. Although informative, this approach does not provide insight into the number of injuries that a defensive player could expect to incur in a given season. To obtain this information, we created a new variable that counts the total number of injuries for each player. We then grouped by position and year to find the total number of injuries for each position. This value was then divided by the number of players and then the number of seasons to produce the average injuries per player per year. These results as well as other summary statistics are presented below.
+We could interpret the mean value for defensive players (DEF) by stating that about 512 DEF players are injured per season. Although informative, this approach does not provide insight into the number of injuries that a defensive player could expect to incur in a given season. To obtain this information, we created a new variable that counts the total number of injuries for each player. We then grouped by position and year to find the total number of injuries for each position. This value was then divided by the number of players and then the number of seasons to produce the average injuries per player per year, broken down by position. The only complication here is that while our dataset contains all NFL players who were injured, we do not have a complete count of all players who were not injured, meaning that we do not have an accurate count of players who had zero injuries. To account for this, we will instead find the average number of injuries per player per season among players who are injured, or the expected number of injuries for a player conditioned on them being injured at least once. These results as well as other summary statistics are presented below.
 
 ```{r, echo=F}
 
@@ -143,7 +143,7 @@ Now, we can state the expected number of injuries for a DEF player is about 2 pe
 
 In addition to total injury counts over the total 2009-2021 period, we are also concerned with the evolution of these counts over time. We chart this below.
 
-```{r, echo=F, message=F}
+```{r, echo=F, message=F, fig.width=10}
 players %>% group_by(position_id, year) %>% 
   summarise(total = sum(total_injuries, na.rm = T)) %>% 
   ggplot(aes(year, total, color = position_id)) +
@@ -158,9 +158,9 @@ players %>% group_by(position_id, year) %>%
   
 ```
 
-When viewing the plot, it is important to note that some positions have more players on the field than others. For example, there are eleven defensive players on at a given time but only one quarterback. This suggests that scaling should be performed to account for the different group sizes. Scaling by the number of players in each position would essentially be the average number of injuries per player per position. The plot of these averages over time is presented below:
+We chose to use a log scale on the y-axis because this makes it easier to see the lines towards the bottom of the graph, which all overalap without the log scale. When viewing the plot, it is important to note that some positions have more players on the field than others. For example, there are eleven defensive players on at a given time but only one quarterback. This suggests that scaling should be performed to account for the different group sizes. Scaling by the number of players in each position would essentially be the average number of injuries per player per position. As in the table above, we can only calculate the expected number of injuries among players who were injured at least once. The plot of these averages over time is presented below:
 
-```{r, echo=F, message=F}
+```{r, echo=F, message=F, fig.width=10}
 # code for plot over time
 exp_injuries_byYear <- players %>% 
   filter(!is.na(total_injuries)) %>% # remove players with no injury (NA's)
@@ -179,6 +179,8 @@ exp_injuries_byYear %>%
                                                      "Quarterback", "Running Back", "Tight End", "Wide Receiver")) 
 ```
 
+Note that none of these values are less than 1, because all values are conditioned on players being injured at least once.
+
 Another important part of our analysis was checking for missing data. The table below shows that we had a small number of missing measurements for player height/weight/bmi. These values were removed prior to the analyses.
 
 ```{r, echo=F}
@@ -191,19 +193,13 @@ players <- players %>%
   drop_na(height_inches)
 ```
 
-After completing our initial EDA, we turned our attention to the classification task of predicting whether a player will be injured in a given season given their position, as well as other player information (e.g., height, weight, age, team). And, where possible, we sought to interpret odds ratios explaining the relationship between player position and injury risk. The three main classification algorithms we explored were logistic regression, k-Nearest Neighbors (kNN), and Random Forest. These methods were selected due to the categorical nature of our outcome (injured or not), and because of the varying degrees of flexibility afforded by these approaches. We first proceed with exploratory analysis to assess the suitability of logistic regression for this task. The initial screening below considers p-values to be significant if they fall below the standard significance level of 0.05.
-
-```{r, echo=F}
-players = players %>% mutate(position_id = relevel(position_id, ref = "TE"))
-
-logi_fit = glm(data = players, injury ~ position_id + bmi + age, family = binomial())
-pander(summary(logi_fit))
-
-```
+After completing our initial EDA, we turned our attention to the classification task of predicting whether a player will be injured in a given season given their position, as well as other player information (e.g., height, weight, age, team). And, where possible, we sought to interpret odds ratios explaining the relationship between player position and injury risk. The three main classification algorithms we explored were logistic regression, k-Nearest Neighbors (kNN), and Random Forest. These methods were selected due to the categorical nature of our outcome (injured or not), and because of the varying degrees of flexibility afforded by these approaches. We first proceed with exploratory analysis to assess the suitability of logistic regression for this task. 
 
 From here, we opted to perform forward selection as a more systematic way of finding good features for the model. The process of forward selection begins by regressing the outcome variable on just the intercept, and then subsequently adds covariates to the model based on which obtains the lowest AIC value. The final results of this process appear below:
 
 ```{r, echo=F}
+players = players %>% mutate(position_id = relevel(position_id, ref = "TE"))
+
 # baseline logistic regression model (intercept only)
 logi_fit_all <- glm(data = players, injury ~ 1, family = binomial())
 summary(logi_fit_all)
@@ -306,7 +302,7 @@ roc_logi = roc(test_set[["injury"]], p_hat_logit) # ROC curve creation
 roc_knn = roc(test_set[["injury"]], f_hat_knn)
 roc_rf = roc(test_set[["injury"]], p_hat_rf)
 
-ggroc(list("Logistic Regression" = roc_logi, "kNN, k = 71" = roc_knn, "Random Forest" = roc_rf)) +
+ggroc(list("Logistic Regression" = roc_logi, "kNN, k = 21" = roc_knn, "Random Forest" = roc_rf)) +
   theme(legend.title = element_blank()) +
   geom_segment(aes(x = 1, xend = 0, y = 0, yend = 1), color = "black", linetype = "dashed") +
   ggtitle("ROC Curves") +
@@ -405,8 +401,8 @@ library(lubridate)
 
 ```{r, echo=FALSE, message = FALSE}
 # Load Data
-load("../Data/data_for_plots/injuries_by_team.Rdata")
-load("../Data/data_for_plots/injuries_by_team_with_year_summary.Rdata")
+load("../Data/data_for_plots/Q3/injuries_by_team.Rdata")
+load("../Data/data_for_plots/Q3/injuries_by_team_with_year_summary.Rdata")
 ```
 
 We first consider the total injuries per year over the entire 2009-2021 period, as well as the max injuries that a team had in a single season over this period. 

@@ -47,13 +47,20 @@ As for question 7, we realized that this question could be subsumed by other que
 ### IV) Data: Source, scraping method, cleanup, etc.
 
 **1) Data source**
-Our data source was [pro-football-reference.com](pro-football-reference.com). 
+Our data source was [pro-football-reference.com](pro-football-reference.com). This website publishes a report of injuries for each NFL team, with a column for every game played by the team and a row for each player who had been injured during the season. 
 
 **2) Web scraping method**
+
+A webscraping algorithm was created which iterated across each year available on the website (2009-2021) and across each NFL team. The webscraping script read all information available from the table and saved it in an R object. 
 
 **3) Data cleaning**
 
 **a) Data shaping**
+
+In order to conduct analyses on player injuries, injury tables were transformed into a table with one row per injured player per year. To do this, we first selected only the regular season games from each table to give equivalent estimates for teams who made it to the playoffs. We then counted the number of games a player was listed as injured (the sum of non-blank entries in the table) and the number of games a player was listed as not playing. In order to describe injuries, we concatenated all unique injury descriptions for a given player into one string. 
+
+
+Additional player demographic data were provided by gridironai.com. Because this dataset had one row for every player for every week, duplicates were removed so that there was only one row per player per season. 
 
 **b) Injury classification**
 

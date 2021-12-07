@@ -282,11 +282,6 @@ players %>% ggplot(aes(age, fill = injury)) +
 We are also interested in understanding which injuries are most common in the NFL; we begin by simply charting the distribution of injuries, using the very granular injury type classifications available from our data source. 
 
 ```{r, echo=FALSE, message = FALSE, fig.width = 10}
-library(dplyr)
-library(stringr)
-library(tidytext)
-library(gsubfn)
-
 # Load data
 injuries <- read.csv("../Data/all_injuries_clean.csv")
 

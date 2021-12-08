@@ -1,6 +1,6 @@
 ---
 title: "BST 260 Final Report"
-author: "Dan Nolte"
+author: "Willow Duffel, Lauren Mock, Addison McGhee, Zach Clement, Dan Nolte"
 date: "11/23/2021"
 output: html_document
 ---
@@ -19,7 +19,7 @@ In particular, we would like to examine which positions are most at risk for inj
 
 What inspired us most was a conversation we all had about the severity and even controversial topic of helmet protection/concussions in the NFL. We wondered if head injuries were the most common injuries among NFL players and if concussion injuries decreased once new rules and technology were introduced in 2017. From there, we considered other related topics pertaining to NFL injuries. 
 
-We discovered that, unsurprisingly, we were not the first people to ask these questions. We came across a useful resource call [pro-football-reference.com](www.pro-football-reference.com) which compiled rosters and injuries for all NFL teams dating back to 2008, and included downloadable CSVs of this data for ease of analysis. We found that there is in fact a [Kaggle competition](https://www.kaggle.com/jaseziv83/an-analysis-of-nfl-injuries/report) which investigates the relationship between playing surface (synthetic turf vs. natural turf) and injury performance. We also discovered several independent analyses on this topic, including [one on the topic of concussions](https://www.edgewortheconomics.com/experience-06-23-2011-nfl-players-injury-analysis) from a consulting firm,[one on the relationship between weather conditions and injury incidence](https://www.datawithbliss.com/weather-data) conducted by a data scientist employed by the NFL, and [an academic research article](https://www.sciencedirect.com/science/article/pii/S2666061X21000808) examining the injury rate in the NFL in the 2020 NFL season, and claiming that it was higher than usual due to the lack of a pre-season because of COVID-19.    
+We discovered that, unsurprisingly, we were not the first people to ask these questions. We came across a useful resource call [pro-football-reference.com](www.pro-football-reference.com) which compiled rosters and injuries for all NFL teams dating back to 2008, and included downloadable CSVs of this data for ease of analysis. We found that there is in fact a [Kaggle competition](https://www.kaggle.com/jaseziv83/an-analysis-of-nfl-injuries/report) which investigates the relationship between playing surface (synthetic turf vs. natural turf) and injury performance. We also discovered several independent analyses on this topic, including [one on the topic of concussions](https://www.edgewortheconomics.com/experience-06-23-2011-nfl-players-injury-analysis) from a consulting firm, [one on the relationship between weather conditions and injury incidence](https://www.datawithbliss.com/weather-data) conducted by a data scientist employed by the NFL, and [an academic research article](https://www.sciencedirect.com/science/article/pii/S2666061X21000808) examining the injury rate in the NFL in the 2020 NFL season, and claiming that it was higher than usual due to the lack of a pre-season because of COVID-19.    
 
 These reports gave us confidence that was a precedence for studying these topics, and helped provide us a road map for asking plausible questions and sourcing data which would allow us to answer our research questions.  
 
@@ -40,7 +40,7 @@ We ultimately decided to only consider questions 1-4, for a few reasons.
 
 For question 5, we ran into a time constraint: because we built our own data for this project by web scraping pro-football-reference.com instead of using a pre-built dataset, finding and building the additional data that would be needed to answer our question about weather conditions would have cost time that was better spent answering questions 1-4 to the best of our abilities.  
 
-We decided against studying questions 6 because as we began to work more closely with our dataset, we realized that the structure of our injury data source did not lend itself to answering our question about injury duration. It was not possible to reliably discern the length of time each athlete was injured due to one particular injury because, for example, it was common for athlete to have multiple injuries at once. Not to mention: we realized there was no way to know the duration of injuries that were incurred at the end of the season and which healed in the off-season.  
+We decided against studying questions 6 because as we began to work more closely with our dataset, we realized that the structure of our injury data source did not lend itself to answering our question about injury duration. It was not possible to reliably discern the length of time each athlete was injured due to one particular injury because, for example, it was common for athletes to have multiple injuries at once. Not to mention: we realized there was no way to know the duration of injuries that were incurred at the end of the season and which healed in the off-season.  
 
 As for question 7, we realized that this question could be subsumed by other questions under consideration. For example, in our analysis of question 1 we ran a logistic regression predicting binary injury occurrence using the covariates under study in question 7.   
 
@@ -66,10 +66,7 @@ Additional player demographic data were provided by gridironai.com. Because this
 
 Once the data was scraped, there were issues with the free text in the injury column. In order to work with this data set to answer some of our primary questions, we needed to clean the data in such a way that the injuries could be easily modeled and analyzed. With so many injuries initially reported, as seen in the exploratory analysis below, we grouped the injuries into 8 main categories based on a part of the body. These included: Head, Shoulder, Upper Torso, Lower Torso, Arm, Hand, Leg and Foot. This way, the distribution of injuries was much easier to evaluate and draw conclusions from all while still keeping the injury data significant to each player. Once this decision was made, we went about the cleanup of the free text by first removing any special characters separating injuries from each other (mostly "\") and replacing them with a space. Many injuries were read like : "knee arm concussion head" as one large string. To deal with this issue we created a code and function that allowed each specific injury to be re-coded in its appropriate category. For example the above string would be recoded as "leg arm head head". Therefore we classified this player as having 1 leg injury, 1 arm injury and 2 head injuries. Once the injuries were re-coded, we used the mutate() function and created count columns for each of 8 body part injuries summing up how many of those injuries each player had. Once this was complete, we used the group_by() function and the summarise() function to obtain the the total counts of each body part injury. This way, we were able to move forward with answering some of our primary questions with a data set that was usable. 
 
-### V) Exploratory Analysis: What visualizations did you use to look at your data in different ways? What are the different statistical methods you considered? Justify the decisions you made, and show any major changes to your ideas. How did you reach these conclusions?
-[TODO: We need to have consistent style for charts. I vote using theme_economist() from the ggthemes library] 
-
-[TODO: We create the same datasets multiple times in each of our analyses, we do not want to include this code in the Rmd file itself, and we definitely don't want to include it multiple times. We should 1) identify the datasets that we need to generate the charts below, 2) create and save these datasets in the Data folder as CSVs, 3) just refer to these datasets here for graphing results] 
+### V) Exploratory Analysis
 
 We conducted exploratory data analysis on each of our 4 questions of interest separately. Below we will describe initial analysis and results for each question. 
 
@@ -89,6 +86,7 @@ library(rpart)
 library(splitstackshape)
 library(tidyverse)
 library(dplyr)
+
 theme_set(theme_economist())
 options(digits = 3)
 theme_update(plot.title = element_text(hjust = 0.5))
@@ -352,7 +350,7 @@ All things considered, the logistic regression has the highest accuracy and the 
 
 We are also interested in understanding which injuries are most common in the NFL; we begin by simply charting the distribution of injuries, using the very granular injury type classifications available from our data source. 
 
-```{r, echo=FALSE, message = FALSE, fig.width = 10}
+```{r, echo=FALSE, warning=FALSE, message = FALSE, fig.width = 10}
 # Load data
 injuries <- read.csv("../Data/all_injuries_clean.csv")
 
@@ -364,9 +362,6 @@ injury_count <- generate_dataset(injuries)
 ```
 
 ```{r, echo=FALSE, message=FALSE, fig.width=10, fig.height=10}
-library(ggplot2)
-library(ggthemes)
-
 injury_count %>%
   mutate(injurytype = reorder_within(injurytype,count, bodypart)) %>%
   ggplot(aes(y=injurytype, x=count)) +
@@ -387,7 +382,7 @@ injury_count %>%
 
 ```
 
-We see here that looking at each specific injury does give us information, but after about the first half of the injury list, the graph is not very impactful. We do conclude however from this graph that knee, ankle and hamstring injuries were the most common injury in NFL football players. After this initial EDA, injuries were group into more general body part injuries as head, shoulder, upper torso, lower torso, arm, hand, leg and foot. This way we were able to analyze the distribution of general injuries more clearly and come to a meaningful conclusion. This can be seen in the RShiny app provided in the EDA files and on the website. 
+We see here that looking at each specific injury does give us information, but after about the first half of the injury list, the graph is not very impactful. We do conclude however from this graph that knee, ankle and hamstring injuries were the most common injury in NFL football players. After this initial EDA, injuries were group into more general body part injuries as head, shoulder, upper torso, lower torso, arm, hand, leg and foot. This way we were able to analyze the distribution of general injuries more clearly and come to a meaningful conclusion. This can be seen in the RShiny app provided in the EDA files and on the [project website](https://sites.google.com/view/bst260groupprojectkntailgaters/home). 
 
 ##### Question 3: Which teams have the most injuries, and are these teams consistently the same ones year over year?
 
@@ -406,7 +401,6 @@ load("../Data/data_for_plots/Q3/injuries_by_team_with_year_summary.Rdata")
 ```
 
 We first consider the total injuries per year over the entire 2009-2021 period, as well as the max injuries that a team had in a single season over this period. 
-
 
 ```{r, echo =FALSE}
 # Plot 1
@@ -431,8 +425,9 @@ p2
 ```
 
 
-It is clear that the Houston Texans have the most total injuries over this period, as well as the maximum injuries. Let's take a look at the distribution of injury counts over each year in the 2009-2021 period, as well as the distirbution of injury counts as shown in a boxplot.   
+It is clear that the Houston Texans have the most total injuries over this period, as well as the maximum injuries. Most teams had between 600-700 injuries over this period, and the Texans' 170 injuries in a single season (2011) is a full 20% higher than the second most injuries per season during this time frame (142 for the Cleveland Browns in 2012).
 
+Let's take a look at the distribution of injury counts over each year in the 2009-2021 period, as well as the distribution of injury counts as shown in a boxplot.   
 
 ```{r, echo=FALSE}
 # Plot 3
@@ -459,17 +454,15 @@ p4 = ggplot(data = injuries_by_team_year_with_summary, aes(x = year, y = full_te
 p4
 ```
 
-From the final chart it appears that the Texans' large number of injuries seem to be concentrated in the 2011-2013 range, after which their injury rates appear to be on par with the rest of the league. 
+From the final chart it appears that the Texans' large number of injuries are concentrated in the 2011-2013 range. There is a sizable spread in the median injuries per season by team over the 2009-2020 seasons; the KC Chiefs had 35 injuries per year on median compared to whopping 85 for the Texans. So while it is the case that the Texan's very high number of total injuries over this period is due to a few large outliers in 2011-2013, their high median injuries suggests that even in a typical season they have more injuries than most other teams.  
 
 ##### Question 4: How has injury incidence evolved over time in the NFL?
-
-**Willow Include: Initial EDA with no cleanup, new EDA with cleanup (for all players), EDA based on Offense or Defense, EDA based on age, EDA based on year**
 
 Here, we will explore trends over time in NFL injuries.
 
 First, we will create simple plot with the number of injures recorded each season.
 
-```{r}
+```{r, echo=FALSE}
 injuries <- read.csv("../Data/data_for_plots/Q4/injuries_Q4.csv")
 
 # create summarized table
@@ -493,7 +486,7 @@ It looks like there have been fewer injuries in recent years, but we can explore
 
 We can also look at the typical number of injuries players get in a season:
 
-```{r}
+```{r, echo=FALSE}
 injuries %>%
   ggplot(aes(x = as.factor(year), y = total_injuries)) +
   geom_boxplot() +
@@ -506,7 +499,7 @@ It is important to note that this data only includes players who were injured at
 
 We can also break down these plots by teams, similarly to how we explored this in question 3:
 
-```{r}
+```{r, echo=FALSE}
 # create summarized table
 time_series_teams <- injuries %>%
   group_by(year, team) %>%
@@ -529,7 +522,7 @@ The decreasing trend in injury counts appears to hold true for all teams.
 
 Concussions in the NFL have received significant attention in the last several years due to concerns regarding CTE and permanent brain damage. The NFL has worked to reduce the frequency of concussions among its players. Has there been a decline in the number of concussions each season since 2009?
 
-```{r}
+```{r, echo=FALSE}
 # create summarized tables
 concussions <- injuries %>%
   group_by(year) %>%
@@ -551,11 +544,10 @@ While there is significant variation over time in this plot, it appears that the
 
 Does this trend hold true across all teams?
 
-```{r}
+```{r, echo=FALSE}
 concussions_team <- injuries %>%
   group_by(year, team) %>%
   summarize(head = sum(head))
-
 
 concussions_team %>%
   ggplot(aes(x = year, y = head, color = team)) +
@@ -572,7 +564,7 @@ We see huge variation in this plot, both between teams and from year to year, wi
 
 Now that we have explored concussions more closely, let's look at trends for all injury types.
 
-```{r}
+```{r, echo=FALSE}
 # gather into long format
 gathered <- injuries %>%
   gather(key = broad_injury, value = broad_count, c("head", "shoulder", "upper_torso", "lower_torso", 
@@ -600,7 +592,7 @@ Interestingly, we see similar trends across all eight injury types. Note that th
 
 We can visualize this information in a barplot as well, which is even easier to interpret:
 
-```{r}
+```{r, echo=FALSE}
 gathered$broad_injury <- as.factor(gathered$broad_injury)
 
 gathered %>%
@@ -621,7 +613,7 @@ The stacked barplot allows us to see the cumulative trends in injuries over time
 
 While all of the previous plots show the same trend in injury counts over time, none of them provide any insight into the severity of each injury. Lastly, we want to explore the average number of games missed due to injury per player per season, as well as the average number of games injured per player per season, which includes players who play through injuries. These plots are shown below:
 
-```{r}
+```{r, echo=FALSE}
 ### games missed
 games_missed <- injuries %>%
   group_by(year) %>%
@@ -637,7 +629,9 @@ games_missed %>%
   scale_x_continuous(breaks = seq(2008, 2020, by = 2)) +
   theme_economist()
 
+```
 
+```{r, echo=FALSE}
 ### games injured
 games_injured <- injuries %>%
   group_by(year) %>%
@@ -658,7 +652,7 @@ The plots actually show entirely different trends, highlighting the importance o
 
 ## Can we use Poisson regression to predict # of injuries that a player will get in a season?
 
-```{r, fig.height = 2, fig.width=12}
+```{r, fig.height = 2, fig.width=12, echo=FALSE}
 injuries %>%
   ggplot(aes(x = total_injuries)) + 
   geom_histogram(binwidth = 1, col = "black", fill = "skyblue")
@@ -683,9 +677,7 @@ summary(poisson_fit)
 
 **tried to explore this, but it won't work because we don't have a true count of people who had zero injuries**
 
-
-### VI) Final Analysis: What did you learn about the data? How did you answer the questions? How can you justify your answers? Note that 1 type of analysis per team member is required. A Shiny app counts as a type of analysis.
-[TODO: We need to decide what qualifies as "exploratory analysis" and what qualifies as "final analysis" for each question.]
+### VI) Final Analysis
 
 I'm thinking everyone can put down what they discovered for their analysis here 
 

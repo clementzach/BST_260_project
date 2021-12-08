@@ -497,6 +497,7 @@ injuries %>%
   ylab("Injuries per Season per Player") +
   theme_economist()
 ```
+
 It is important to note that this data only includes players who were injured at least once, but it is helpful in understanding the typical distribution of the number of injuries per person. Among injured players, the median number of injuries per players was just one injury each season, but a few unlucky players experienced more than 10 injuries in a single season.
 
 Concussions in the NFL have received significant attention in the last several years due to concerns regarding CTE and permanent brain damage. The NFL has worked to reduce the frequency of concussions among its players. Has there been a decline in the number of concussions each season since 2009?

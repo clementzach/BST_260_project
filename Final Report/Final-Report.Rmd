@@ -610,19 +610,6 @@ games_injured %>%
 
 The plots actually show entirely different trends, highlighting the importance of exploring any data set extensively before drawing conclusongs about the data. In the first plot, we see the there a spike in the number of games missed due to injury from 2016-2018, which corresponds with a sharp drop in raw injury counts in the other plots. It is possible that in these years players had fewer injuries than in prior years, but these injuries were more severe, leading to more games missed per injury. It is also possible that new rules force injured players to sit out of games even when they want to play through their injuries. The second plot depicts a more consistent trend in games played while injured with a steep drop-off in 2019. It is interesting to note that the trends in these two plots match reasonably well from 2016 to 2020, with the number of games injured only slightly higher than the number of games missed due to injury. Before 2016, it appears that there were many more games played while injured, because the number of games injured is much higher than the number of games missed. This may be due to changes in NFL rules that prevent injured players from injuring themselves further by continuing to play.
 
-## Can we use Poisson regression to predict # of injuries that a player will get in a season?
-
-```{r, fig.height = 2, fig.width=12, echo=FALSE}
-injuries %>%
-  ggplot(aes(x = total_injuries)) + 
-  geom_histogram(binwidth = 1, col = "black", fill = "skyblue")
-
-injuries %>%
-  ggplot(aes(x = total_injuries)) + 
-  geom_histogram(binwidth = 1, col = "black", fill = "skyblue") +
-  facet_grid(. ~ year)
-```
-
 
 ### VI) Final Analysis
 

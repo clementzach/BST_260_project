@@ -499,29 +499,6 @@ injuries %>%
 ```
 It is important to note that this data only includes players who were injured at least once, but it is helpful in understanding the typical distribution of the number of injuries per person. Among injured players, the median number of injuries per players was just one injury each season, but a few unlucky players experienced more than 10 injuries in a single season.
 
-We can also break down these plots by teams, similarly to how we explored this in question 3:
-
-```{r, echo=FALSE}
-# create summarized table
-time_series_teams <- injuries %>%
-  group_by(year, team) %>%
-  summarize(total_injuries = sum(total_injuries))
-
-# plot
-time_series_teams %>%
-  ggplot(aes(x = year, y = total_injuries, color = team)) +
-  geom_line() +
-  ggtitle("Injuries per Season by Team") +
-  xlab("Season") +
-  ylab("Total Number of Injuries per Team") +
-  ylim(0, 175) +
-  #labs(color = "Team") +
-  scale_x_continuous(breaks = seq(2008, 2020, by = 2)) +
-  theme(legend.position = "none")
-```
-
-The decreasing trend in injury counts appears to hold true for all teams.
-
 Concussions in the NFL have received significant attention in the last several years due to concerns regarding CTE and permanent brain damage. The NFL has worked to reduce the frequency of concussions among its players. Has there been a decline in the number of concussions each season since 2009?
 
 ```{r, echo=FALSE}
@@ -543,26 +520,6 @@ concussions %>%
 ```
 
 While there is significant variation over time in this plot, it appears that there is a downward trend over time in the number of concussions each season.
-
-Does this trend hold true across all teams?
-
-```{r, echo=FALSE}
-concussions_team <- injuries %>%
-  group_by(year, team) %>%
-  summarize(head = sum(head))
-
-concussions_team %>%
-  ggplot(aes(x = year, y = head, color = team)) +
-  geom_line() +
-  ggtitle("Concussions per Season by Team") +
-  xlab("Season") +
-  ylab("Total Number of Concussions per Team") +
-  ylim(0, 20) +
-  theme(legend.position = "none") +
-  scale_x_continuous(breaks = seq(2008, 2020, by = 2))
-```
-
-We see huge variation in this plot, both between teams and from year to year, with somewhere between 0 and 20 players experiencing concussions per team per season. However, we still see what appears to be a general decline in concussions over time.
 
 Now that we have explored concussions more closely, let's look at trends for all injury types.
 

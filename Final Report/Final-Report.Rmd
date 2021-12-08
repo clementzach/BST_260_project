@@ -1,6 +1,6 @@
 ---
 title: "BST 260 Final Report"
-author: "Dan Nolte"
+author: "Willow Duffel, Lauren Mock, Addison McGhee, Zach Clement, Dan Nolte"
 date: "11/23/2021"
 output: html_document
 ---
@@ -405,8 +405,8 @@ library(lubridate)
 
 ```{r, echo=FALSE, message = FALSE}
 # Load Data
-load("../Data/data_for_plots/injuries_by_team.Rdata")
-load("../Data/data_for_plots/injuries_by_team_with_year_summary.Rdata")
+load("../Data/data_for_plots/Q3/injuries_by_team.Rdata")
+load("../Data/data_for_plots/Q3/injuries_by_team_with_year_summary.Rdata")
 ```
 
 We first consider the total injuries per year over the entire 2009-2021 period, as well as the max injuries that a team had in a single season over this period. 

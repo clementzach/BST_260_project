@@ -643,5 +643,17 @@ The random forest is slightly more balanced in terms of sensitivity/specificity.
 
 Logistic regression has the highest accuracy and the highest AUC of all 3 model. It also provides us with clearly interpretable odds ratios for the risk of injury. For these reasons, we'll choose logistic regression as the best model.
 
+make a table with all this information
+
+```{r}
+data.frame(Model = c("Logistic", "kNN (k = 21)", "Random Forest"),
+                     Accuracy = c(0.638, 0.58, 0.637),
+                     Sensitivity = c(0.675, 0.619, 0.637),
+                     Specificity = c(0.600, 0.539, 0.638),
+                     AUC = c(0.701, 0.608, 0.693)) %>%
+  pander()
+```
+
+
 
 &nbsp;

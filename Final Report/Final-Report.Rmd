@@ -5,8 +5,8 @@ date: "11/23/2021"
 output: html_document
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+```{r setup, include=FALSE, set.seed(1)}
+knitr::opts_chunk$set(echo = TRUE, cache = TRUE)
 ```
 
 ### I) Overview and Motivation
@@ -248,6 +248,8 @@ confusionMatrix(data = y_hat_logit,
 
 ```
 
+This model corrects classified players in the testing set as being injured or not injured during a given season 63.8% of the time. The sensitivity of 0.675 indicates that among players who were actually injured, the model predicted 67.5% of them to be injured. The specificity of 0.600 indicates that among players who were not injured, the model corrected classified 60.0% of them as not injured. The specificity and sensitivity are reasonably balanced, but the specificity is slightly higher, meaning that the model is better at accurately predicting who will be injured than who will not be injured.
+
 ### k-Nearest Neighbors
 
 ```{r, eval=F, echo=F}
@@ -272,9 +274,11 @@ plot(res)
 ```
 
 ```{r kNN, echo=F}
+set.seed(1)
+
 knn_fit = knn3(data = train_set, injury ~ position_id + age + I(age^2) + game_starter + 
                  weight_pounds + year, 
-               k = 21) # fit kNN using optimal
+               k = 21) # fit kNN using optimal k
 
 f_hat_knn = predict(knn_fit, newdata = test_set)[ , 2] # get probability for injury
 
@@ -285,9 +289,14 @@ confusionMatrix(data = y_hat_knn,
 
 ```
 
+This model corrects classified players in the testing set as being injured or not injured during a given season 58.0% of the time. The sensitivity of 0.619 indicates that among players who were actually injured, the model predicted 61.9% of them to be injured. The specificity of 0.539 indicates that among players who were not injured, the model corrected classified 53.9% of them as not injured. The specificity and sensitivity are again reasonably balanced, but the specificity is still slightly higher than the sensitivity, meaning that the model is better at accurately predicting who will be injured than who will not be injured. The accuracy, sensitivity, and specificity are all lower in this model than in the previous model.
+
+
 ### Random Forest
 
 ```{r Random Forest, echo=F}
+set.seed(1)
+
 rf_fit = randomForest(injury ~ position_id + age + I(age^2) + game_starter + weight_pounds + year,
                       data = train_set) # fit random forest using training set
 
@@ -301,6 +310,8 @@ confusionMatrix(data = y_hat_rf,
                 reference = test_set[["injury"]], positive = "1") # generate confusion matrix
 
 ```
+
+This model corrects classified players in the testing set as being injured or not injured during a given season 63.7% of the time. The sensitivity of 0.637 indicates that among players who were actually injured, the model predicted 63.7% of them to be injured. The specificity of 0.638 indicates that among players who were not injured, the model corrected classified 63.8% of them as not injured. This model has the most balanced sensitivity and specificity, meaning that the model is equally good at classifying injured and non-injured people.
 
 From the results, we see that the Random Forest obtained the highest accuracy of 0.639, with the logistic regression and kNN receiving accuracies of 0.638 and 0.613, respectively. The ROC curves and corresponding AUC values are presented below.
 
@@ -329,9 +340,9 @@ We now will compare the three models based on Accuracy, AUC, and Sensitivity/Spe
 
 * logistic regression: 0.638
 * kNN: 0.58
-* random forest: 0.636
+* random forest: 0.637
 
-We see that the logistic regression model has the highest accuracy.\
+We see that the logistic regression model has the highest accuracy, but the random forest has almost the same accuracy.\
 
 **AUC** \
 

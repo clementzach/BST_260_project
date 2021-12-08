@@ -1,6 +1,6 @@
 ---
 title: "BST 260 Final Report"
-author: "Willow Duffel, Lauren Mock, Addison McGhee, Zach Clement, Dan Nolte"
+author: "Willow Duffell, Lauren Mock, Addison McGhee, Zach Clement, Dan Nolte"
 date: "11/23/2021"
 output: html_document
 ---
@@ -165,7 +165,7 @@ players %>% group_by(position_id, year) %>%
   
 ```
 
-We chose to use a log scale on the y-axis because this makes it easier to see the lines towards the bottom of the graph, which all overalap without the log scale. When viewing the plot, it is important to note that some positions have more players on the field than others. For example, there are eleven defensive players on at a given time but only one quarterback. This suggests that scaling should be performed to account for the different group sizes. Scaling by the number of players in each position would essentially be the average number of injuries per player per position. As in the table above, we can only calculate the expected number of injuries among players who were injured at least once. The plot of these averages over time is presented below:
+We chose to use a log base 10 scale on the y-axis because this makes it easier to see the lines towards the bottom of the graph, which all overlap on the original scale. When viewing the plot, it is important to note that some positions have more players on the field than others. For example, there are eleven defensive players on at a given time but only one quarterback. This suggests that scaling should be performed to account for the different group sizes. Scaling by the number of players in each position would essentially be the average number of injuries per player per position. As in the table above, we can only calculate the expected number of injuries among players who were injured at least once. The plot of these averages over time is presented below:
 
 ```{r, echo=F, message=F, fig.width=10}
 # code for plot over time
@@ -200,7 +200,7 @@ players <- players %>%
   drop_na(height_inches)
 ```
 
-After completing our initial EDA, we turned our attention to the classification task of predicting whether a player will be injured in a given season given their position, as well as other player information (e.g., height, weight, age, team). And, where possible, we sought to interpret odds ratios explaining the relationship between player position and injury risk. The three main classification algorithms we explored were logistic regression, k-Nearest Neighbors (kNN), and Random Forest. These methods were selected due to the categorical nature of our outcome (injured or not), and because of the varying degrees of flexibility afforded by these approaches. We first proceed with exploratory analysis to assess the suitability of logistic regression for this task. 
+After completing our initial EDA, we turned our attention to the classification task of predicting whether a player will be injured in a given season given their position, as well as other player information (e.g., height, weight, age, team). And, where possible, we sought to interpret odds ratios explaining the relationship between player position and injury risk. The three main classification algorithms we explored were logistic regression, k-Nearest Neighbors (kNN), and Random Forest. These methods were selected due to the categorical nature of our outcome (injured or not), and because of the varying degrees of flexibility afforded by these approaches. We first proceeded with an exploratory analysis to assess the suitability of logistic regression for this task. 
 
 From here, we opted to perform forward selection as a more systematic way of finding good features for the model. The process of forward selection begins by regressing the outcome variable on just the intercept, and then subsequently adds covariates to the model based on which obtains the lowest AIC value. The final results of this process appear below:
 
@@ -219,7 +219,7 @@ logi_step_fit <- logi_fit_all %>%
 summary(logi_step_fit)
 ```
 
-We see that Game starter (yes/no), year, position, age, age_squared, and weight (lbs) were the most useful predictors. Age squared was added as a potential predictor because of the possibility that age and injury status may have a quadratic relationship, where the risk of injury increases as players get older, but then decreases after a certain age since fewer people play football beyond 40. After completing the initial variable screening, we began fitting the machine learning models. The data was divided for the training and test sets, with the former receiving 70% of the data and the latter receiving the remaining 30%. The Confusion Matrix, Accuracy, Sensitivity, Specificifify of the models are presented below. In addition, the `k` parameter for kNN was found by two-fold cross-validation. We chose `k = 21` as this is the point where the accuracy began to level off.
+We see that Game starter (yes/no), year, position, age, age_squared, and weight (lbs) were the most useful predictors. Age squared was added as a potential predictor because of the possibility that age and injury status may have a quadratic relationship, where the risk of injury increases as players get older, but then decreases after a certain age since fewer people play football beyond 40. After completing the initial variable screening, we began fitting the machine learning models. The data was divided for the training and test sets, with the former receiving 70% of the data and the latter receiving the remaining 30%. The Confusion Matrix, Accuracy, Sensitivity, Specificity of the models are presented below. In addition, the `k` parameter for kNN was found by two-fold cross-validation. We chose `k = 21` as this is the point where the accuracy began to level off.
 
 ```{r, echo=F, include=F}
 set.seed(1)
@@ -248,7 +248,7 @@ confusionMatrix(data = y_hat_logit,
 
 ```
 
-This model corrects classified players in the testing set as being injured or not injured during a given season 63.8% of the time. The sensitivity of 0.675 indicates that among players who were actually injured, the model predicted 67.5% of them to be injured. The specificity of 0.600 indicates that among players who were not injured, the model corrected classified 60.0% of them as not injured. The specificity and sensitivity are reasonably balanced, but the specificity is slightly higher, meaning that the model is better at accurately predicting who will be injured than who will not be injured.
+This model correctly classified players in the testing set as being injured or not injured during a given season 63.8% of the time. The sensitivity of 0.675 indicates that among players who were actually injured, the model predicted 67.5% of them to be injured. The specificity of 0.600 indicates that among players who were not injured, the model corrected classified 60.0% of them as not injured. The specificity and sensitivity are reasonably balanced, but the specificity is slightly higher, meaning that the model is better at accurately predicting who will be injured than who will not be injured.
 
 ### k-Nearest Neighbors
 
@@ -289,7 +289,7 @@ confusionMatrix(data = y_hat_knn,
 
 ```
 
-This model corrects classified players in the testing set as being injured or not injured during a given season 58.0% of the time. The sensitivity of 0.619 indicates that among players who were actually injured, the model predicted 61.9% of them to be injured. The specificity of 0.539 indicates that among players who were not injured, the model corrected classified 53.9% of them as not injured. The specificity and sensitivity are again reasonably balanced, but the specificity is still slightly higher than the sensitivity, meaning that the model is better at accurately predicting who will be injured than who will not be injured. The accuracy, sensitivity, and specificity are all lower in this model than in the previous model.
+This model correctly classified players in the testing set as being injured or not injured during a given season 58.0% of the time. The sensitivity of 0.619 indicates that among players who were actually injured, the model predicted 61.9% of them to be injured. The specificity of 0.539 indicates that among players who were not injured, the model corrected classified 53.9% of them as not injured. The specificity and sensitivity are again reasonably balanced, but the specificity is still slightly higher than the sensitivity, meaning that the model is better at accurately predicting who will be injured than who will not be injured. The accuracy, sensitivity, and specificity are all lower in this model than in the previous model.
 
 
 ### Random Forest
@@ -311,9 +311,9 @@ confusionMatrix(data = y_hat_rf,
 
 ```
 
-This model corrects classified players in the testing set as being injured or not injured during a given season 63.7% of the time. The sensitivity of 0.637 indicates that among players who were actually injured, the model predicted 63.7% of them to be injured. The specificity of 0.638 indicates that among players who were not injured, the model corrected classified 63.8% of them as not injured. This model has the most balanced sensitivity and specificity, meaning that the model is equally good at classifying injured and non-injured people.
+This model correctly classified players in the testing set as being injured or not injured during a given season 63.7% of the time. The sensitivity of 0.632 indicates that among players who were actually injured, the model predicted 63.2% of them to be injured. The specificity of 0.640 indicates that among players who were not injured, the model corrected classified 64.0% of them as not injured. This model has the most balanced sensitivity and specificity, meaning that the model is equally good at classifying injured and non-injured people.
 
-From the results, we see that the Random Forest obtained the highest accuracy of 0.639, with the logistic regression and kNN receiving accuracies of 0.638 and 0.613, respectively. The ROC curves and corresponding AUC values are presented below.
+From the results, we see that the Logistic Regression obtained the highest accuracy of 0.638, with the kNN and Random Forest receiving accuracies of 0.58 and 0.637, respectively. The ROC curves and corresponding AUC values are presented below.
 
 ```{r, message=FALSE, echo=F}
 roc_logi = roc(test_set[["injury"]], p_hat_logit) # ROC curve creation
@@ -339,9 +339,9 @@ We now will compare the three models based on Accuracy, Sensitivity, Specificity
 ```{r, echo = FALSE}
 data.frame(Model = c("Logistic", "kNN (k = 21)", "Random Forest"),
                      Accuracy = c(0.638, 0.58, 0.637),
-                     Sensitivity = c(0.675, 0.619, 0.637),
-                     Specificity = c(0.600, 0.539, 0.638),
-                     AUC = c(0.701, 0.608, 0.693)) %>%
+                     Sensitivity = c(0.675, 0.619, 0.632),
+                     Specificity = c(0.600, 0.539, 0.640),
+                     AUC = c(0.701, 0.608, 0.692)) %>%
   pander()
 ```
 
@@ -359,6 +359,7 @@ We are also interested in understanding which injuries are most common in the NF
 injuries <- read.csv("../Data/all_injuries_clean.csv")
 
 # Load count distribution function
+options(gsubfn.engine = "R")
 source("../EDA/Question2/EDA1Function.R")
 
 # Create injury count data set
@@ -526,7 +527,7 @@ While there is significant variation over time in this plot, it appears that the
 
 Now that we have explored concussions more closely, let's look at trends for all injury types.
 
-```{r, echo=FALSE}
+```{r, echo=FALSE, message=F}
 # gather into long format
 gathered <- injuries %>%
   gather(key = broad_injury, value = broad_count, c("head", "shoulder", "upper_torso", "lower_torso", 

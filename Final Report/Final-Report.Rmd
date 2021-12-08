@@ -47,20 +47,22 @@ As for question 7, we realized that this question could be subsumed by other que
 ### IV) Data: Source, scraping method, cleanup, etc.
 
 **1) Data source**
-Our data source was [pro-football-reference.com](pro-football-reference.com). This website publishes a report of injuries for each NFL team, with a column for every game played by the team and a row for each player who had been injured during the season. 
+Our data source was [pro-football-reference.com](pro-football-reference.com). This website publishes a report of injuries for each NFL team, with a column for every game played by the team and a row for each player who had been injured during the season. The website has injury reports from 2009 to 2021. 
 
 **2) Web scraping method**
 
-A webscraping algorithm was created which iterated across each year available on the website (2009-2021) and across each NFL team. The webscraping script read all information available from the table and saved it in an R object. 
+A webscraping algorithm was created using `rvest` which iterated across each year available on the website (2009-2021) and across each NFL team. We started the webscraping script at a webpage which had a link for each team's main page. We then used the `html_attr` function to select all elements of type href to get all links including in the webpage. We then used string matching to identify which of those links corresponded to team pages. 
+
+After each team's main page was identified, we modified the URL to select the injury page for a given year. Because the injury pages had more information than just player injuries, the `html_elements` function was used to select only the table including player injury information. From that table, the `html_attr` function was used to select appropriate data, such as injury status, the text description, and whether the player had a "Did not play" specifier for each game. 
 
 **3) Data cleaning**
 
 **a) Data shaping**
 
-In order to conduct analyses on player injuries, injury tables were transformed into a table with one row per injured player per year. To do this, we first selected only the regular season games from each table to give equivalent estimates for teams who made it to the playoffs. We then counted the number of games a player was listed as injured (the sum of non-blank entries in the table) and the number of games a player was listed as not playing. In order to describe injuries, we concatenated all unique injury descriptions for a given player into one string. 
+In order to conduct analyses on player injuries, injury tables were transformed into a table with one row per injured player per year. To do this, we first selected only the regular season games from each table in order to give equivalent estimates for teams who made it to the playoffs. We then counted the number of games a player was listed as injured (the sum of non-blank entries in the table) and the number of games a player was listed as not playing. In order to describe injuries, we concatenated all unique injury descriptions for a given player into one string. We then had a dataset with one row per player per season, which allowed us to conduct season-wide analyses.
 
 
-Additional player demographic data were provided by gridironai.com. Because this dataset had one row for every player for every week, duplicates were removed so that there was only one row per player per season. 
+Additional player demographic data (such as height, weight, age, and position) were provided by gridironai.com. Because this dataset had one row for every player for every week, duplicates were removed so that there was only one row per player per season. 
 
 **b) Injury classification**
 

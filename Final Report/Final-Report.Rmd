@@ -61,14 +61,19 @@ After each team's main page was identified, we modified the URL to select the in
 
 In order to conduct analyses on player injuries, injury tables were transformed into a table with one row per injured player per year. To do this, we first selected only the regular season games from each table in order to give equivalent estimates for teams who made it to the playoffs. We then counted the number of games a player was listed as injured (the sum of non-blank entries in the table) and the number of games a player was listed as not playing. In order to describe injuries, we concatenated all unique injury descriptions for a given player into one string. We then had a dataset with one row per player per season, which allowed us to conduct season-wide analyses.
 
-
 Additional player demographic data (such as height, weight, age, and position) were provided by [gridironai.com](gridironai.com). Because this dataset had one row for every player for every week, duplicates were removed so that there was only one row per player per season. 
 
 Although the dataset from [gridironai.com](gridironai.com) was the most complete of any dataset we identified on the internet (including attempting to webscrape aplayer information directly from [pro-football-reference.com](pro-football-reference.com)), it did not contain every player who had been listed as injured in the injury tables. We kept this in mind by carefully considering which types of join of the two datasets would result in selection bias for our analyses. 
 
+An important note is that for ease of analysis we excluded injuries sustained in the post-season (as some players play in the post-season and some do not) to remove a source of bias when counting injuries in a given season or otherwise analyzing injury incidence. 
+
 **b) Injury classification**
 
-Once the data was scraped, there were issues with the free text in the injury column. In order to work with this data set to answer some of our primary questions, we needed to clean the data in such a way that the injuries could be easily modeled and analyzed. With so many injuries initially reported, as seen in the exploratory analysis below, we grouped the injuries into 8 main categories based on a part of the body. These included: Head, Shoulder, Upper Torso, Lower Torso, Arm, Hand, Leg and Foot. This way, the distribution of injuries was much easier to evaluate and draw conclusions from all while still keeping the injury data significant to each player. Once this decision was made, we went about the cleanup of the free text by first removing any special characters separating injuries from each other (mostly "\") and replacing them with a space. Many injuries were read like : "knee arm concussion head" as one large string. To deal with this issue we created a code and function that allowed each specific injury to be re-coded in its appropriate category. For example the above string would be recoded as "leg arm head head". Therefore we classified this player as having 1 leg injury, 1 arm injury and 2 head injuries. Once the injuries were re-coded, we used the mutate() function and created count columns for each of 8 body part injuries summing up how many of those injuries each player had. Once this was complete, we used the group_by() function and the summarise() function to obtain the the total counts of each body part injury. This way, we were able to move forward with answering some of our primary questions with a data set that was usable. 
+Once the data was scraped, there were issues with the free text in the injury column. In order to work with this data set to answer some of our primary questions, we needed to clean the data in such a way that the injuries could be easily modeled and analyzed. With so many injuries initially reported, as seen in the exploratory analysis below, we grouped the injuries into 8 main categories based on a part of the body. 
+
+These included: Head, Shoulder, Upper Torso, Lower Torso, Arm, Hand, Leg and Foot. This way, the distribution of injuries was much easier to evaluate and draw conclusions from all while still keeping the injury data significant to each player. Once this decision was made, we went about the cleanup of the free text by first removing any special characters separating injuries from each other (mostly "\") and replacing them with a space. Many injuries were read like : "knee arm concussion head" as one large string. To deal with this issue we created a code and function that allowed each specific injury to be re-coded in its appropriate category. For example the above string would be recoded as "leg arm head head". Therefore we classified this player as having 1 leg injury, 1 arm injury and 2 head injuries. 
+
+Once the injuries were re-coded, we used the `mutate()` function and created count columns for each of 8 body part injuries summing up how many of those injuries each player had. Once this was complete, we used the `group_by()` function and the `summarise()` function to obtain the the total counts of each body part injury. This way, we were able to move forward with answering some of our primary questions with a data set that was usable. 
 
 ### V) Exploratory Analysis
 
@@ -614,9 +619,94 @@ The plots actually show entirely different trends, highlighting the importance o
 
 
 ### VI) Final Analysis
+Many of our key conclusions are stated above in the exploratory analysis section but we will expand upon them and summarize results here. 
 
-I'm thinking everyone can put down what they discovered for their analysis here 
+**1. Which positions are most at-risk for injuries?**
 
+As for assessing which positions were most at risk for injury, we were constrained by the position classification available at our data source; this source only broke out positions for offensive positions and grouped all defensive players together. Further, because of limitations of our data source, we could only count injuries among those players who were injured at least once per season over the 2009-2021 period in question. We found that among those players injured at least once, running backs had the highest average total injuries per player, per season at 1.71, whereas kickers injured at least once had only 1.17 injuries per kicker per season. Of course, in order to properly evaluate the injury risk associated with each position, we would have liked to have averaged in the players who were not injured at each position per season, but this was unfortunately not possible given the constraint of our data source. 
 
+However, we have another tool to more fully assess the injury risk at each position even though our data source did not include 100% of non-injured players: logistic regression. We built a logistic regression model to predict the binary outcome of injured vs. non-injured in a given season, using a carefully selected set of covariates, including a categorical variable for position. The regression output of this model allowed us to interpret odds ratios to better understand the injury risk associated with each position. Doing so, we again find that running back is the highest injury-risk position in the NFL: the odds of a running back sustaining at least one injury in a given NFL season is 1.21 [95% CI: 1.06-1.39] times that of a tight end (the reference category in our regression), on average, holding constant all other covariates in our model. On the other hand, we find that kicker is the "safest" position: the odds of a kicker sustaining at least one injury in a given NFL season is 0.364 [95% CI: 0.289-0.459] times that of a tight end on average, holding constant other covariates. 
+
+As for the classification task of assigning certain players to injured vs. non-injured in a given season: we find that logistic regression outperforms kNN and Random Forest, achieving the highest ROC (0.7), accuracy (0.638), and sensitivity (0.675).
+
+```{r, echo=FALSE}
+ggroc(list("Logistic Regression" = roc_logi, "kNN, k = 21" = roc_knn, "Random Forest" = roc_rf)) +
+  theme(legend.title = element_blank()) +
+  geom_segment(aes(x = 1, xend = 0, y = 0, yend = 1), color = "black", linetype = "dashed") +
+  ggtitle("ROC Curves") +
+  xlab("Specificity") +
+  ylab("Sensitivity") 
+```
+
+**2. Which injuries are most common in the NFL?**
+
+We now turn our attention to the question of which types of injuries most commonly afflict NFL players. After extensively cleaning and reclassifying our injury variable, we observe that leg injuries are by far the most common (the most common sub-injures of the leg are knee and hamstring), followed by foot injuries; whereas arm injuries are least common. These trends hold for offense and defense separately. They are also quite consistent for each offense position broken out separately. Our Shiny app allows for easy and interactive plotting of these results, and is available [here](https://sites.google.com/view/bst260groupprojectkntailgaters/home). 
+
+```{r, echo=FALSE}
+# Read in the data 
+injury <- read.csv("../Data/all_injuries_clean.csv")
+players <-  read.csv("../Data/all_player_demographic_clean.csv")
+
+# Merge data
+injuries <- left_join(injury, players, by = c("name", "team", "year", "full_team"))
+
+# Gather data
+injury_gather <- gather(injuries, key = "bodypart", value = "counts", 11:18)
+
+injury_gather %>%
+    group_by(bodypart) %>%
+    summarise(counts = sum(counts)) %>% # Plotting counts
+    ggplot(aes(x = reorder(bodypart, - counts), y = counts)) +  # Put in descending order
+    geom_col() +
+    geom_text(aes(label = counts), position= position_dodge(width = 0.9), vjust = -0.25, fontface = 'bold') +
+    scale_y_continuous(limits = c(0, 10000)) +  #Fixed axis
+    xlab("Body Part") +
+    ylab("Count") +
+    ggtitle("Distribution of Injuries for All Injured NFL players") +
+    theme_economist() +
+    theme(
+        axis.title.x = element_text(size = 12, vjust = -3),
+        axis.title.y = element_text(size = 12, vjust = 3),
+        title = element_text(size = 13),
+        plot.title = element_text(hjust = 0.5)
+    )
+```
+
+**3. Which teams have the most injuries, and are these teams consistently the same ones year over year?**
+
+A somewhat surprising result of this analysis is that over the 2009-2020 period, it did indeed appear as if one team typically had more injuries than the others: the Houston Texans. The Texans had the highest total injuries, the max injuries in a single season, and highest median injuries per season over the period in question. The injury per season distribution was quite similar for each team apart from the Texans and Browns (which had many more injuries than most) and the Steelers and Chiefs (which had many fewer injuries than most).
+
+```{r, echo=FALSE}
+p3 = ggplot(data = injuries_by_team_year_with_summary, aes(x = all_injuries, y = reorder(full_team, median_injuries))) +
+  geom_boxplot() + 
+  theme_economist() + 
+  xlab("Injuries Per Year") +
+  ylab(element_blank()) +
+  ggtitle("Injuries Per Year (2009-2020), by Team")
+p3
+```
+
+**4. How has injury incidence evolved over time in the NFL?**
+
+A key finding of this analysis is that, according to our data source, injuries fell dramatically for nearly every team in 2016 compared to prior years, and injury levels have remained at this lower level since. We searched for a possible explanation for this fact (for example, relating to rule changes or reporting changes imposed by the NFL), and we also interrogated our data source for changes in its data collection methodolgy around this time, but were not able to identify a clear reason that we observe this steep decline in 2016. 
+
+[Write up thing about how number of games missed went up- though i'm kind of concerned about including this because it is  pretty counter-intuitive and makes it seems like our data doesn't make sense]
+
+Another finding of this section was that, not surprisingly, the composition of injuries (by injury type we defined) was relatively consistent between 2008-2021, with leg and foot injuries accounting for the plurality in each year. 
+
+```{r, echo=FALSE}
+gathered %>%
+  ggplot(aes(x = year, y = broad_count, fill = broad_injury)) +
+  geom_bar(stat = "identity", color = "white") + 
+  ggtitle("Injury Type by Year") +
+  xlab("Season") +
+  ylab("Number of Injuries") +
+  labs(fill = "Injury Type") +
+  scale_fill_discrete(labels=c("Arm", "Foot", "Hand", "Head", "Leg", "Lower Torso", 
+                               "Shoulder", "Upper Torso")) + 
+  scale_x_continuous(breaks = seq(2008, 2020, by = 2)) +
+  theme_economist() +
+  theme(legend.position = "right")
+```
 
 

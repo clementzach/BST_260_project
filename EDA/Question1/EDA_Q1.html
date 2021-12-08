@@ -11,7 +11,7 @@
 
 <meta name="author" content="Addison McGhee" />
 
-<meta name="date" content="2021-12-07" />
+<meta name="date" content="2021-12-08" />
 
 <title>EDA for P1</title>
 
@@ -167,7 +167,7 @@ pre code {
 
 <h1 class="title toc-ignore">EDA for P1</h1>
 <h4 class="author">Addison McGhee</h4>
-<h4 class="date">2021-12-07</h4>
+<h4 class="date">2021-12-08</h4>
 
 </div>
 
@@ -1280,6 +1280,54 @@ Sensitivity: 0.632<br />
 Specificity: 0.640</p>
 <p>The random forest is slightly more balanced in terms of sensitivity/specificity.</p>
 <p>Logistic regression has the highest accuracy and the highest AUC of all 3 model. It also provides us with clearly interpretable odds ratios for the risk of injury. For these reasons, we’ll choose logistic regression as the best model.</p>
+<p>make a table with all this information</p>
+<pre class="r"><code>data.frame(Model = c(&quot;Logistic&quot;, &quot;kNN (k = 21)&quot;, &quot;Random Forest&quot;),
+                     Accuracy = c(0.638, 0.58, 0.637),
+                     Sensitivity = c(0.675, 0.619, 0.637),
+                     Specificity = c(0.600, 0.539, 0.638),
+                     AUC = c(0.701, 0.608, 0.693)) %&gt;%
+  pander()</code></pre>
+<table style="width:88%;">
+<colgroup>
+<col width="22%" />
+<col width="15%" />
+<col width="19%" />
+<col width="19%" />
+<col width="11%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="center">Model</th>
+<th align="center">Accuracy</th>
+<th align="center">Sensitivity</th>
+<th align="center">Specificity</th>
+<th align="center">AUC</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="center">Logistic</td>
+<td align="center">0.638</td>
+<td align="center">0.675</td>
+<td align="center">0.6</td>
+<td align="center">0.701</td>
+</tr>
+<tr class="even">
+<td align="center">kNN (k = 21)</td>
+<td align="center">0.58</td>
+<td align="center">0.619</td>
+<td align="center">0.539</td>
+<td align="center">0.608</td>
+</tr>
+<tr class="odd">
+<td align="center">Random Forest</td>
+<td align="center">0.637</td>
+<td align="center">0.637</td>
+<td align="center">0.638</td>
+<td align="center">0.693</td>
+</tr>
+</tbody>
+</table>
 <p> </p>
 </div>
 </div>

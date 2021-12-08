@@ -1,4 +1,8 @@
 
+library(dplyr)
+library(stringr)
+library(tidytext)
+library(gsubfn)
 
 generate_dataset <- function(injuries){  #takes in a dataset
   

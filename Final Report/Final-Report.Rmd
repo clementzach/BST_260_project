@@ -623,19 +623,6 @@ injuries %>%
 ```
 
 
-### Try fitting Poisson model to predict injury count for each person
-
-```{r}
-mean(injuries$total_injuries)
-var(injuries$total_injuries)
-# we actually have under-dispersion
-
-poisson_fit <- glm(total_injuries ~ year, family = poisson, data = injuries)
-summary(poisson_fit)
-```
-
-**tried to explore this, but it won't work because we don't have a true count of people who had zero injuries**
-
 ### VI) Final Analysis
 
 I'm thinking everyone can put down what they discovered for their analysis here 

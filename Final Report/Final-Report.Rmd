@@ -5,8 +5,8 @@ date: "11/23/2021"
 output: html_document
 ---
 
-```{r setup, include=FALSE, set.seed(1)}
-knitr::opts_chunk$set(echo = TRUE, cache = TRUE)
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ### I) Overview and Motivation

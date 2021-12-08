@@ -420,7 +420,7 @@ pander(summary(logi_fit))
 
 ### Let's remove the players above 40 y/o and see if `age` is still significant
 
-```{r}
+```{r, include=F, eval=F}
 logi_fit2 = glm(data = players %>% filter(age < 40), injury ~ position_id + bmi + age, family = binomial())
 pander(summary(logi_fit2))
 ```
@@ -428,7 +428,7 @@ pander(summary(logi_fit2))
 &nbsp;
 
 ### Let's try Quadratic Age, too (may not be a linear relationship with injuries)
-```{r}
+```{r, include=F, eval=F}
 players = players %>% mutate(age_sq = age^2)
 
 logi_fit3 = glm(data = players %>% filter(age < 40), injury ~ position_id + bmi + age + age_sq, family = binomial())

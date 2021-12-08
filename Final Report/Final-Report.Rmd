@@ -334,35 +334,19 @@ auc(roc_knn)
 auc(roc_rf)
 ```
 
-We now will compare the three models based on Accuracy, AUC, and Sensitivity/Specificity:\
+We now will compare the three models based on Accuracy, Sensitivity, Specificity, and AUC:\
 
-**Accuracy**\
+```{r, echo = FALSE}
+data.frame(Model = c("Logistic", "kNN (k = 21)", "Random Forest"),
+                     Accuracy = c(0.638, 0.58, 0.637),
+                     Sensitivity = c(0.675, 0.619, 0.637),
+                     Specificity = c(0.600, 0.539, 0.638),
+                     AUC = c(0.701, 0.608, 0.693)) %>%
+  pander()
+```
 
-* logistic regression: 0.638
-* kNN: 0.58
-* random forest: 0.637
 
-We see that the logistic regression model has the highest accuracy, but the random forest has almost the same accuracy.\
-
-**AUC** \
-
-* logistic regression: 0.701
-* kNN: 0.607
-* random forest: 0.691
-
-We also see that the logistic regression model has the highest AUC. Now, since it is clear that kNN is the poorest performing model, we will only consider the logistic regression and random forest going forward.\
-
-**Logistic Regression:**\ 
-
-* Sensitivity: 0.675          
-* Specificity: 0.600   
-
-**Random Forest:**\
-
-* Sensitivity: 0.632         
-* Specificity: 0.640
-
-The random forest is slightly more balanced in terms of sensitivity/specificity. However, the logistic regression attains a higher sensitivity.\
+We see that the logistic regression model has the highest accuracy, but the random forest has almost the same accuracy. We also see that the logistic regression model has the highest AUC. The k-nearest neighbors model is clearly the worst model under both of these metrics, so we will move on to look at sensitivity and specificity for the other two models. The random forest is slightly more balanced in terms of sensitivity/specificity. However, the logistic regression attains a higher sensitivity.\
 
 All things considered, the logistic regression has the highest accuracy and the highest AUC of all 3 models. It also provides us with clearly interpretable odds ratios for the risk of injury. For these reasons, we will choose logistic regression as the best model for our situation.
 

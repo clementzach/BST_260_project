@@ -27,7 +27,7 @@ There are 2 other subfolders within the `Data` folder: `Data/data_dictionary` an
 For each of our 4 research questions, we completed exploratory data analysis. Each analysis is saved in the `EDA` folder for each question being analyzed. Data, plots, and regression output which appears in our final RMarkdown file are available in the question-specific EDA files.
 
 ### 3. Shiny App
-The R Shiny App can be found in the following path: `BST_260_project/EDA/Question2` and is named `app.R` This app is also shown on a separate tab on our project [website](https://sites.google.com/view/bst260groupprojectkntailgaters/home). 
+The R Shiny App can be found in the following path: `BST_260_project/EDA/Question2` and is named `app.R` This app is also shown on a separate tab on our project [website](https://sites.google.com/view/bst260groupprojectkntailgaters/home) under the [RShiny Tab](https://sites.google.com/view/bst260groupprojectkntailgaters/analysis/rshiny-app). 
 
 ### 4. Final Report
 Our final report RMarkdown and associated HTML files are saved in the `Final Report` folder.  

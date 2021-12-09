@@ -33,4 +33,4 @@ The R Shiny App can be found in the following path: `BST_260_project/EDA/Questio
 Our final report RMarkdown and associated HTML files are saved in the `Final Report` folder.  
 
 ### 5. Website
-The Google site displaying our pri=oject objectives and analyses can be found here: [Google Site](https://sites.google.com/view/bst260groupprojectkntailgaters/home).
+The Google site displaying our project objectives and analyses can be found here: [Google Site](https://sites.google.com/view/bst260groupprojectkntailgaters/home).

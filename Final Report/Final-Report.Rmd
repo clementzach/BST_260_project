@@ -53,7 +53,7 @@ We decided against studying questions 6 because as we began to work more closely
 
 As for question 7, we realized that this question could be subsumed by other questions under consideration. For example, in our analysis of question 1 we ran a logistic regression predicting binary injury occurrence using the covariates under study in question 7.   
 
-### IV) Data: Source, scraping method, cleanup, etc.
+### IV) Data
 
 **1) Data source**
 Our data source was [pro-football-reference.com](pro-football-reference.com). This website publishes a report of injuries for each NFL team, with a column for every game played by the team and a row for each player who had been injured during the season. The website has injury reports from 2009 to 2021. 

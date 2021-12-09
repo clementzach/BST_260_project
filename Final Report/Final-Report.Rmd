@@ -9,6 +9,11 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+Our data was scraped from webpages such as [this one](https://www.pro-football-reference.com/teams/buf/2021_injuries.htm).
+
+Additional demographic data was provided by the folks at gridironai.com, and can be downloaded [here](https://drive.google.com/drive/u/0/folders/1KTcoZRtcylZRc9rZk9zfA4PwJon-xtwB)
+
+
 ### I) Overview and Motivation
 
 We are a team of athletes and sports lovers, so we were interested in using data to research a problem in the world of professional sports. We decided to examine NFL injuries since particular injuries are common in football at the professional level, and their incidence and severity play a large role in determining the players’ comeback to play and a team’s success. Injuries don’t occur at random; we’d like to deduce some patterns underlying injury incidence to better understand the risks involved for players and teams.
@@ -54,6 +59,8 @@ Our data source was [pro-football-reference.com](pro-football-reference.com). Th
 A webscraping algorithm was created using `rvest` which iterated across each year available on the website (2009-2021) and across each NFL team. We started the webscraping script at a webpage which had a link for each team's main page. We then used the `html_attr` function to select all elements of type href to get all links including in the webpage. We then used string matching to identify which of those links corresponded to team pages. 
 
 After each team's main page was identified, we modified the URL to select the injury page for a given year. Because the injury pages had more information than just player injuries, the `html_elements` function was used to select only the table including player injury information. From that table, the `html_attr` function was used to select appropriate data, such as injury status, the text description, and whether the player had a "Did not play" specifier for each game. 
+
+In order to avoid overloading the servers at [pro-football-reference.com](pro-football-reference.com), we paused our webscraping script for 5 seconds between accessing each webpage. 
 
 **3) Data cleaning**
 

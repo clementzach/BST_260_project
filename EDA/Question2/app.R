@@ -19,8 +19,8 @@ library(ggthemes)
 
 
 # Read in the data 
-injury <- read.csv("../../Data/all_injuries_clean.csv")
-players <-  read.csv("../../Data/all_player_demographic_clean.csv")
+injury <- read.csv("all_injuries_clean.csv")
+players <-  read.csv("all_player_demographic_clean.csv")
 
 # Merge data
 injuries <- left_join(injury, players, by = c("name", "team", "year", "full_team"))

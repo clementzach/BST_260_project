@@ -7,9 +7,8 @@ output: html_document
 
 #### Instructions where to access the data
 
-All of the data can be accessed inside the `Data` folder in the BST_260_project repository. Once inside this folder, you will see the main 2 csv files that we used for analysis: `all_injuries.csv` and `all_player_demographic_clean.csv`. Inside the data_build folder you will find functions used to webscrape the original data into the usable csv files. The data dictionary folder includes a text file that explains the cleaned data set and all the variables included and the data_for_plots includes the data sets used to create our EDA and analysis plots (These data sets were just altered from the orginal cleaned data in the `Data` folder).
+All of the data can be accessed inside the `Data` folder in the BST_260_project repository. Once inside this folder, you will see the main 2 csv files that we used for analysis: `all_injuries.csv` and `all_player_demographic_clean.csv`. Inside the data_build folder you will find functions used to webscrape the original data into the usable csv files. The data dictionary folder includes a text file that explains the cleaned data set and all the variables included and the data_for_plots includes the data sets used to create our EDA and analysis plots (These data sets were just altered from the original cleaned data in the `Data` folder).
 
-[Not sure what Superseded includes - Zach do you mind writing this one?]
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)

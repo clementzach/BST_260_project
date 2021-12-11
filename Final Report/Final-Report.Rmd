@@ -7,16 +7,21 @@ output: html_document
 
 #### Instructions where to access the data
 
-All of the data can be accessed inside the `Data` folder in the BST_260_project repository, available [here](https://github.com/clementzach/BST_260_project). Once inside this folder, you will see the main 2 csv files that we used for analysis: `all_injuries.csv` and `all_player_demographic_clean.csv`. Inside the data_build folder you will find functions used to webscrape the original data into the usable csv files. The data dictionary folder includes a text file that explains the cleaned data set and all the variables included and the data_for_plots includes the data sets used to create our EDA and analysis plots (These data sets were just altered from the original cleaned data in the `Data` folder).
-
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+All of the data can be accessed inside the `Data` folder in the BST_260_project repository, available [here](https://github.com/clementzach/BST_260_project). 
+
+- Once inside this folder, you will see the main 2 csv files that we used for analysis: `all_injuries.csv` and `all_player_demographic_clean.csv`. 
+- Inside the data_build folder you will find functions used to webscrape the original data into the usable csv files. 
+- The data dictionary folder includes a text file with variable descriptions. 
+- The data_for_plots folder contains data sets used to create our EDA and analysis plots. 
+  - These datasets are merged and modified versions of the two primary datasets (we saved these to avoid including a lot of cleaning code directly in our final Rmd file). The work code to clean and generate them is available in the `EDA` folder.
+
 Our data was scraped from webpages such as [this one](https://www.pro-football-reference.com/teams/buf/2021_injuries.htm).
 
-Additional demographic data was provided by the folks at gridironai.com, and can be downloaded [here](https://drive.google.com/drive/u/0/folders/1KTcoZRtcylZRc9rZk9zfA4PwJon-xtwB)
-
+Additional demographic data was provided by the folks at gridironai.com, and can be downloaded [here](https://drive.google.com/drive/u/0/folders/1KTcoZRtcylZRc9rZk9zfA4PwJon-xtwB).
 
 ### I) Overview and Motivation
 
